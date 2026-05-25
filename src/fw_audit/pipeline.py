@@ -6,10 +6,13 @@ import hashlib
 from pathlib import Path
 
 from fw_audit.classify.engine import ClassificationEngine, load_policy
+from fw_audit.graph.cross_zone import cross_zone_findings
 from fw_audit.graph.flows import build_flows
+from fw_audit.graph.ipmap import build_ip_to_host
 from fw_audit.models import AuditContext, Host, InputRecord
 from fw_audit.parsers.detector import parse_file
-from fw_audit.policy.loader import load_hosts
+from fw_audit.policy.loader import load_hosts, load_zone_policy
+from fw_audit.report.dot_export import write_dot
 
 
 def _sha256(path: Path) -> str:
@@ -27,13 +30,24 @@ def _discover_inputs(path: Path) -> list[tuple[Path, str]]:
 
     results: list[tuple[Path, str]] = []
     for child in sorted(path.iterdir()):
-        if child.is_dir():
+        if child.is_dir() and child.name not in ("out", "output"):
             for f in sorted(child.iterdir()):
                 if f.is_file() and f.suffix in (".txt", ".csv", ".log"):
                     results.append((f, child.name))
         elif child.is_file() and child.suffix in (".txt", ".csv", ".log"):
             results.append((child, path.stem))
     return results
+
+
+def _resolve_host(hosts_map: dict[str, Host], host_key: str, ctx_hosts: list[Host]) -> Host:
+    host = hosts_map.get(host_key) or hosts_map.get(host_key.replace("_", "-"))
+    if host:
+        return host
+    hid = f"H{len(ctx_hosts) + 1:03d}"
+    host = Host(id=hid, hostname=host_key, zone="internal")
+    hosts_map[host_key] = host
+    ctx_hosts.append(host)
+    return host
 
 
 def run_audit(
@@ -43,13 +57,16 @@ def run_audit(
     policy_file: Path | None = None,
     operator: str = "home-lab",
     platforms: list[str] | None = None,
+    export_dot: bool = True,
 ) -> AuditContext:
+    from fw_audit.generators.cisco_ios import generate_cisco_ios
     from fw_audit.generators.linux_nftables import generate_nftables
     from fw_audit.generators.windows import generate_windows
     from fw_audit.report.xml_builder import write_audit_xml
 
     output_dir.mkdir(parents=True, exist_ok=True)
     hosts_map = load_hosts(hosts_file)
+    zone_policy = load_zone_policy(hosts_file)
     policy = load_policy(policy_file)
     engine = ClassificationEngine(policy)
 
@@ -59,19 +76,13 @@ def run_audit(
         ctx.hosts = [hosts_map[list(hosts_map)[0]]]
 
     all_listeners = []
-    host_for_file: dict[str, Host] = {}
+    all_connections = []
 
     for file_path, host_key in _discover_inputs(input_path):
-        host = hosts_map.get(host_key) or hosts_map.get(host_key.replace("_", "-"))
-        if not host:
-            hid = f"H{len(ctx.hosts) + 1:03d}"
-            host = Host(id=hid, hostname=host_key, zone="internal")
-            hosts_map[host_key] = host
-            ctx.hosts.append(host)
-
-        listeners, parser_name = parse_file(file_path, host.id)
+        host = _resolve_host(hosts_map, host_key, ctx.hosts)
+        listeners, connections, parser_name = parse_file(file_path, host.id)
         all_listeners.extend(listeners)
-        host_for_file[host.id] = host
+        all_connections.extend(connections)
 
         ctx.inputs.append(
             InputRecord(
@@ -83,9 +94,19 @@ def run_audit(
         )
 
     ctx.listeners = all_listeners
+    ctx.connections = all_connections
     hosts_by_id = {h.id: h for h in ctx.hosts}
+    ip_map = build_ip_to_host(hosts_map)
+
     ctx.findings = engine.apply_to_listeners(ctx.listeners, hosts_by_id)
-    ctx.flows = build_flows(ctx.listeners, hosts_by_id)
+    ctx.flows = build_flows(
+        ctx.listeners,
+        hosts_by_id,
+        connections=ctx.connections,
+        ip_map=ip_map,
+        engine=engine,
+    )
+    ctx.findings.extend(cross_zone_findings(ctx.flows, hosts_by_id, zone_policy))
 
     platforms = platforms or ["windows", "nftables"]
     for host in ctx.hosts:
@@ -98,18 +119,24 @@ def run_audit(
         if "windows" in platforms:
             out = host_out / "rules-windows.ps1"
             count = generate_windows(host, host_listeners, policy, out)
-            ctx.rulesets.append(
-                _artifact("windows", "powershell", out, host.id, count)
-            )
+            ctx.rulesets.append(_artifact("windows", "powershell", out, host.id, count))
         if "nftables" in platforms:
             out = host_out / "rules-nftables.conf"
             count = generate_nftables(host, host_listeners, policy, out)
-            ctx.rulesets.append(
-                _artifact("linux", "nftables", out, host.id, count)
-            )
+            ctx.rulesets.append(_artifact("linux", "nftables", out, host.id, count))
+        if "cisco" in platforms:
+            out = host_out / "rules-cisco-ios.acl"
+            count = generate_cisco_ios(host, host_listeners, policy, out)
+            ctx.rulesets.append(_artifact("cisco", "ios-acl", out, host.id, count))
 
     xml_path = output_dir / "audit-report.xml"
     write_audit_xml(ctx, xml_path)
+
+    if export_dot:
+        dot_path = output_dir / "network-dataflow.dot"
+        write_dot(ctx, dot_path)
+        ctx.warnings.append(f"Graphviz DOT: {dot_path}")
+
     return ctx
 
 

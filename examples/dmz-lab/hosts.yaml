@@ -1,0 +1,35 @@
+# Three-tier home lab: internal workstations, DMZ web, internal DB
+zone_definitions:
+  internal: "Trusted LAN — workstations and database"
+  dmz: "Semi-trusted — internet-facing web tier"
+  mgmt: "Jump/admin network"
+
+allowed_zone_pairs:
+  - { from: internal, to: dmz }
+  - { from: internal, to: internal }
+  - { from: mgmt, to: internal }
+  - { from: mgmt, to: dmz }
+  - { from: dmz, to: internal }  # app→db (review in production)
+
+hosts:
+  pc01:
+    id: H001
+    hostname: pc01
+    zone: internal
+    role: workstation
+    os_family: windows
+    addresses: ["192.168.1.10"]
+  web01:
+    id: H002
+    hostname: web01
+    zone: dmz
+    role: server
+    os_family: linux
+    addresses: ["10.0.0.5"]
+  db01:
+    id: H003
+    hostname: db01
+    zone: internal
+    role: server
+    os_family: linux
+    addresses: ["192.168.1.20"]
