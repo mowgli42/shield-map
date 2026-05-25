@@ -1,0 +1,21 @@
+version: "1.0"
+default_unknown: risky
+categories:
+  preferred:
+    - { proto: tcp, port: 22, service: ssh, notes: "Management; restrict source in policy" }
+    - { proto: tcp, port: 443, service: https }
+    - { proto: udp, port: 53, service: dns }
+  risky:
+    - { proto: tcp, port: 80, service: http }
+    - { proto: tcp, port: 3389, service: rdp }
+    - { proto: tcp, port: 5900, service: vnc }
+    - { proto: tcp, port: 445, service: smb }
+    - { proto: tcp, port: 8080, service: http-alt }
+  unsafe:
+    - { proto: tcp, port: 23, service: telnet }
+    - { proto: tcp, port: 21, service: ftp }
+    - { proto: tcp, port: 2375, service: docker-api }
+    - { proto: tcp, port: 6379, service: redis }
+    - { proto: tcp, port: 27017, service: mongodb }
+    - { proto: tcp, port: 135, service: msrpc }
+    - { proto: tcp, port: 139, service: netbios-ssn }
