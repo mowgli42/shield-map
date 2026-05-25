@@ -1,0 +1,83 @@
+# Service catalog for Phase 1a init wizard (secure home-lab defaults)
+services:
+  ssh:
+    label: "SSH administration"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 22, classification: preferred, restrict_source: true }
+
+  fileshare:
+    label: "File sharing (SMB/CIFS)"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 445, classification: risky, restrict_source: true }
+      - { proto: tcp, port: 139, classification: risky, restrict_source: true }
+
+  web:
+    label: "Web server"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 443, classification: preferred }
+      - { proto: tcp, port: 80, classification: risky, optional: true, id: http }
+
+  database-postgres:
+    label: "PostgreSQL"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 5432, classification: risky, restrict_source: true }
+
+  database-mysql:
+    label: "MySQL/MariaDB"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 3306, classification: risky, restrict_source: true }
+
+  email:
+    label: "Mail server (SMTP/IMAP)"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 587, classification: risky, restrict_source: true }
+      - { proto: tcp, port: 993, classification: preferred, restrict_source: true }
+
+  media:
+    label: "Media server (Plex/Jellyfin)"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 32400, classification: risky, restrict_source: true }
+
+  printer:
+    label: "Network printer"
+    roles: [server, both, client]
+    ports:
+      - { proto: tcp, port: 631, classification: risky, restrict_source: true }
+
+  homeassistant:
+    label: "Home Assistant"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 8123, classification: risky, restrict_source: true }
+
+  nas-management:
+    label: "NAS web management (Synology/QNAP)"
+    roles: [server, both]
+    ports:
+      - { proto: tcp, port: 5000, classification: risky, restrict_source: true }
+      - { proto: tcp, port: 5001, classification: preferred, restrict_source: true }
+
+  vpn:
+    label: "VPN server (WireGuard)"
+    roles: [server, both]
+    ports:
+      - { proto: udp, port: 51820, classification: preferred }
+
+client_options:
+  rdp:
+    label: "Remote Desktop (from management network only)"
+    ports:
+      - { proto: tcp, port: 3389, classification: risky, restrict_source: true }
+
+baseline:
+  client_outbound:
+    - { proto: udp, port: 53, direction: outbound, service: dns }
+    - { proto: tcp, port: 443, direction: outbound, service: https }
+    - { proto: tcp, port: 80, direction: outbound, service: http }

@@ -1,0 +1,13 @@
+hostname: nas01
+host_type: server
+os_family: linux
+zone: internal
+mgmt_cidr: "192.168.1.0/24"
+services:
+  - ssh
+  - fileshare
+  - web
+allow_rdp: false
+web_mode: https-only
+internet_facing: false
+allow_outbound_dns_https: false

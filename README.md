@@ -49,3 +49,24 @@ firefox out/audit-report.html
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE).
+
+## Phase 1a — Secure initial config wizard
+
+Generate a **deny-by-default** baseline before you have netstat exports:
+
+```bash
+# Interactive (client, server, services, management CIDR)
+fw-audit init -o out-init/
+
+# Non-interactive answers file
+fw-audit init --answers examples/home-lab/init-answers-server.yaml -o out-init/
+```
+
+**Questions covered:** client vs server, OS (Windows/Linux), zone, management network CIDR, optional RDP (clients), server services (file share, web, SSH, databases, NAS, VPN, etc.), HTTPS-only vs HTTP+HTTPS.
+
+**Outputs:** `init-profile.yaml`, firewall rules with **source restrictions** (mgmt CIDR), XML audit report, `INIT-README.txt`.
+
+| Host type | Default inbound |
+|-----------|-----------------|
+| Client | Deny all (optional RDP from mgmt CIDR only) |
+| Server | Only selected services; SSH/SMB restricted to mgmt CIDR |

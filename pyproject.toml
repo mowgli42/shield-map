@@ -42,3 +42,4 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+"src/fw_audit/init/services.yaml" = "fw_audit/init/services.yaml"
