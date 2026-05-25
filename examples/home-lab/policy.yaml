@@ -1,0 +1,4 @@
+version: "1.0-home"
+approved_risky:
+  - { proto: tcp, port: 3389 }
+  - { proto: tcp, port: 80 }

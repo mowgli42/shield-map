@@ -1,0 +1,44 @@
+[project]
+name = "fw-audit"
+version = "0.1.0"
+description = "Netstat/port audit tool with firewall rulesets and XML security reports"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "shield-map contributors" }]
+dependencies = [
+    "typer>=0.12.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+fw-audit = "fw_audit.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fw_audit"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/fw_audit/classify/defaults.yaml" = "fw_audit/classify/defaults.yaml"
+"src/fw_audit/report/templates/audit-report.xsl" = "fw_audit/report/templates/audit-report.xsl"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

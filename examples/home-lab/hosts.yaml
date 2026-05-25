@@ -1,0 +1,15 @@
+hosts:
+  homelab-pc:
+    id: H001
+    hostname: homelab-pc
+    zone: internal
+    role: workstation
+    os_family: windows
+    owner: home
+  nas01:
+    id: H002
+    hostname: nas01
+    zone: internal
+    role: server
+    os_family: linux
+    owner: home

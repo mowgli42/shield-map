@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:fw-audit:network-audit:1"
+           xmlns:fa="urn:fw-audit:network-audit:1"
+           elementFormDefault="qualified">
+
+  <xs:element name="NetworkAuditReport">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Metadata" type="fa:MetadataType"/>
+        <xs:element name="ComplianceMapping" type="fa:ComplianceType"/>
+        <xs:element name="ExecutiveSummary" type="fa:SummaryType"/>
+        <xs:element name="Inventory" type="fa:InventoryType"/>
+        <xs:element name="ObservedListeners" type="fa:ListenersType"/>
+        <xs:element name="Flows" type="fa:FlowsType"/>
+        <xs:element name="Findings" type="fa:FindingsType"/>
+        <xs:element name="RulesetArtifacts" type="fa:ArtifactsType" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+      <xs:attribute name="generatedAt" type="xs:dateTime" use="required"/>
+      <xs:attribute name="toolVersion" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="MetadataType">
+    <xs:sequence>
+      <xs:element name="PolicyVersion" type="xs:string"/>
+      <xs:element name="Operator" type="xs:string"/>
+      <xs:element name="InputChecksum" type="fa:ChecksumType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ChecksumType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="algorithm" type="xs:string" use="required"/>
+        <xs:attribute name="file" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="ComplianceType">
+    <xs:sequence>
+      <xs:element name="Framework" type="fa:FrameworkType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FrameworkType">
+    <xs:sequence>
+      <xs:element name="Safeguard" type="fa:ControlItemType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Control" type="fa:ControlItemType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="version" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="ControlItemType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="status" type="fa:StatusType" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="StatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="addressed"/>
+      <xs:enumeration value="partial"/>
+      <xs:enumeration value="not_applicable"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="SummaryType">
+    <xs:sequence>
+      <xs:element name="Count" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:nonNegativeInteger">
+              <xs:attribute name="classification" type="fa:ClassificationType" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="ClassificationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="preferred"/>
+      <xs:enumeration value="risky"/>
+      <xs:enumeration value="unsafe"/>
+      <xs:enumeration value="unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="InventoryType">
+    <xs:sequence>
+      <xs:element name="Host" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Owner" type="xs:string" minOccurs="0"/>
+          </xs:sequence>
+          <xs:attribute name="id" type="xs:string" use="required"/>
+          <xs:attribute name="hostname" type="xs:string" use="required"/>
+          <xs:attribute name="zone" type="xs:string" use="required"/>
+          <xs:attribute name="role" type="xs:string" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ListenersType">
+    <xs:sequence>
+      <xs:element name="Listener" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Service" type="xs:string" minOccurs="0"/>
+            <xs:element name="Process" type="xs:string" minOccurs="0"/>
+          </xs:sequence>
+          <xs:attribute name="hostRef" type="xs:string" use="required"/>
+          <xs:attribute name="protocol" type="xs:string" use="required"/>
+          <xs:attribute name="port" type="xs:positiveInteger" use="required"/>
+          <xs:attribute name="bindAddress" type="xs:string" use="required"/>
+          <xs:attribute name="classification" type="fa:ClassificationType" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="FlowsType">
+    <xs:sequence>
+      <xs:element name="Flow" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Client" type="fa:EndpointType"/>
+            <xs:element name="Server" type="fa:EndpointType"/>
+            <xs:element name="Service" type="fa:ServiceType"/>
+          </xs:sequence>
+          <xs:attribute name="id" type="xs:string" use="required"/>
+          <xs:attribute name="classification" type="fa:ClassificationType" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EndpointType">
+    <xs:attribute name="hostRef" type="xs:string"/>
+    <xs:attribute name="zone" type="xs:string"/>
+    <xs:attribute name="address" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="ServiceType">
+    <xs:attribute name="protocol" type="xs:string" use="required"/>
+    <xs:attribute name="port" type="xs:positiveInteger" use="required"/>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="FindingsType">
+    <xs:sequence>
+      <xs:element name="Finding" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="code" type="xs:string" use="required"/>
+              <xs:attribute name="severity" type="xs:string" use="required"/>
+              <xs:attribute name="hostRef" type="xs:string"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ArtifactsType">
+    <xs:sequence>
+      <xs:element name="Artifact" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="platform" type="xs:string" use="required"/>
+          <xs:attribute name="format" type="xs:string" use="required"/>
+          <xs:attribute name="path" type="xs:string" use="required"/>
+          <xs:attribute name="defaultDeny" type="xs:boolean" use="required"/>
+          <xs:attribute name="ruleCount" type="xs:nonNegativeInteger" use="required"/>
+          <xs:attribute name="hostRef" type="xs:string" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
