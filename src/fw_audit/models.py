@@ -45,6 +45,7 @@ class Listener:
     line_number: int = 0
     classification: Classification = Classification.UNKNOWN
     service_name: str = ""
+    allowed_sources: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -56,6 +57,7 @@ class Flow:
     port: int
     classification: Classification
     service_name: str = ""
+    allowed_sources: list[str] = field(default_factory=list)
     client_host_id: Optional[str] = None
     client_address: Optional[str] = None
     client_zone: str = "unknown"

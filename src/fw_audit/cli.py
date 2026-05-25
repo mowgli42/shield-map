@@ -218,3 +218,45 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+@app.command("init")
+def init_firewall(
+    output_dir: Path = typer.Option(Path("out-init"), "--output-dir", "-o"),
+    answers: Optional[Path] = typer.Option(
+        None,
+        "--answers",
+        help="YAML answers file (non-interactive)",
+    ),
+    non_interactive: bool = typer.Option(
+        False,
+        "--non-interactive",
+        help="Require --answers; no prompts",
+    ),
+    platform: str = typer.Option(
+        "auto",
+        "--platform",
+        help="auto, windows, nftables, or all",
+    ),
+    operator: str = typer.Option("home-lab", "--operator"),
+) -> None:
+    """Phase 1a: interactive wizard for secure initial firewall config."""
+    from fw_audit.init.pipeline import run_init
+    from fw_audit.init.wizard import load_or_wizard
+
+    intent = load_or_wizard(answers, non_interactive)
+    platforms: list[str] | None = None
+    if platform == "windows":
+        platforms = ["windows"]
+    elif platform in ("nftables", "linux"):
+        platforms = ["nftables"]
+    elif platform == "all":
+        platforms = ["windows", "nftables"]
+
+    ctx = run_init(intent, output_dir, platforms=platforms, operator=operator)
+    typer.echo(f"Init profile saved: {output_dir / 'init-profile.yaml'}")
+    typer.echo(f"XML report: {output_dir / 'audit-report.xml'}")
+    typer.echo(f"Planned rules: {len(ctx.listeners)} listeners | Findings: {len(ctx.findings)}")
+    for art in ctx.rulesets:
+        typer.echo(f"Ruleset: {art.path}")
+    typer.echo(f"Read: {output_dir / 'INIT-README.txt'}")

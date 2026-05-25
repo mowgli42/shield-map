@@ -1,0 +1,10 @@
+hostname: homelab-pc
+host_type: client
+os_family: windows
+zone: internal
+mgmt_cidr: "192.168.1.0/24"
+services: []
+allow_rdp: false
+web_mode: https-only
+internet_facing: false
+allow_outbound_dns_https: true

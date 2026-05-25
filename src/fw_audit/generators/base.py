@@ -20,12 +20,22 @@ def ruleset_header(platform: str, hostname: str) -> str:
 
 
 def listeners_to_allow(
-    listeners: list[Listener], policy: dict[str, Any]
+    listeners: list[Listener], policy: dict[str, Any], *, init_mode: bool = False
 ) -> list[Listener]:
     """Return listeners that should receive explicit allow rules."""
+    if init_mode or policy.get("init_baseline"):
+        return [
+            ln
+            for ln in listeners
+            if ln.classification in (Classification.PREFERRED, Classification.RISKY)
+            and ln.state != "planned-outbound"
+        ]
+
     approved = policy.get("approved_risky", [])
     allowed: list[Listener] = []
     for ln in listeners:
+        if ln.state == "planned-outbound":
+            continue
         if ln.classification == Classification.PREFERRED:
             allowed.append(ln)
         elif ln.classification == Classification.RISKY:
