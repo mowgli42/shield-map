@@ -102,7 +102,7 @@ def write_audit_xml(ctx: AuditContext, output_path: Path) -> None:
         f = ET.SubElement(
             flows_el,
             _q("Flow"),
-            {"id": flow.id, "classification": flow.classification.value},
+            {"id": flow.id, "classification": flow.classification.value, "flowKind": flow.flow_kind},
         )
         client = ET.SubElement(
             f,

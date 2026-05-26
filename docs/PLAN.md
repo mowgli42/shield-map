@@ -469,16 +469,16 @@ fw-audit all-in-one <path>          # rules + xml + html (home default)
 
 ### Phase 2 — Multi-host & graph
 
-- [ ] `hosts.yaml` inventory + batch imports
-- [ ] Flow graph (ESTABLISHED connections)
-- [ ] Cross-zone findings
-- [ ] Cisco IOS ACL generator
+- [x] `hosts.yaml` inventory + batch imports
+- [x] Flow graph (ESTABLISHED connections)
+- [x] Cross-zone findings
+- [x] Cisco IOS ACL generator
 
 ### Phase 3 — Cloud & policy hardening
 
 - [ ] AWS / Azure / GCP artifact generators
 - [ ] Approved source CIDRs for risky ports
-- [ ] Graphviz DOT export for dataflow diagrams
+- [x] Graphviz DOT export for dataflow diagrams (Phase 2)
 - [ ] `compliance-mapping.md` auto-section in XML
 
 ### Phase 4 — Operational polish (home lab)

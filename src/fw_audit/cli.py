@@ -43,8 +43,8 @@ def ingest(
     for file_path, host_key in _discover_inputs(path):
         host = load_hosts(hosts).get(host_key)
         hid = host.id if host else "H001"
-        listeners, parser = parse_file(file_path, hid)
-        typer.echo(f"{file_path}: parser={parser} listeners={len(listeners)} host={host_key}")
+        listeners, connections, parser = parse_file(file_path, hid)
+        typer.echo(f"{file_path}: parser={parser} listeners={len(listeners)} sessions={len(connections)} host={host_key}")
 
 
 @app.command("analyze")
@@ -62,7 +62,7 @@ def analyze(
 
     for file_path, host_key in _discover_inputs(path):
         host = hosts_map.get(host_key) or Host_fallback(hosts_map, host_key)
-        listeners, _ = parse_file(file_path, host.id)
+        listeners, connections, _ = parse_file(file_path, host.id)
         all_listeners.extend(listeners)
 
     by_id = {h.id: h for h in hosts_map.values() if h.id.startswith("H")}
@@ -130,7 +130,7 @@ def generate(
     platform: str = typer.Option(
         "all",
         "--platform",
-        help="windows, nftables, or all",
+        help="windows, nftables, cisco, or all",
     ),
 ) -> None:
     """Generate firewall rulesets."""
@@ -139,6 +139,8 @@ def generate(
         platforms.append("windows")
     if platform in ("all", "nftables", "linux"):
         platforms.append("nftables")
+    if platform in ("all", "cisco"):
+        platforms.append("cisco")
     ctx = run_audit(
         path,
         output_dir,
@@ -178,6 +180,7 @@ def all_in_one(
     policy: Optional[Path] = typer.Option(None, "--policy"),
     operator: str = typer.Option("home-lab", "--operator"),
     platform: str = typer.Option("all", "--platform"),
+    export_dot: bool = typer.Option(True, "--dot/--no-dot", help="Export Graphviz DOT"),
 ) -> None:
     """Generate rulesets, XML report, and HTML (if xsltproc available)."""
     platforms = []
@@ -185,6 +188,8 @@ def all_in_one(
         platforms.append("windows")
     if platform in ("all", "nftables", "linux"):
         platforms.append("nftables")
+    if platform in ("all", "cisco"):
+        platforms.append("cisco")
 
     ctx = run_audit(
         path,
@@ -193,6 +198,7 @@ def all_in_one(
         policy_file=policy,
         operator=operator,
         platforms=platforms,
+        export_dot=export_dot,
     )
     xml_path = output_dir / "audit-report.xml"
     typer.echo(f"XML report: {xml_path}")

@@ -31,6 +31,7 @@ class Host:
     os_family: str = "unknown"
     owner: str = ""
     tags: list[str] = field(default_factory=list)
+    addresses: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -49,6 +50,21 @@ class Listener:
 
 
 @dataclass
+class Connection:
+    """Active session (e.g. TCP ESTABLISHED) observed on a host."""
+
+    host_id: str
+    protocol: str
+    local_address: str
+    local_port: int
+    remote_address: str
+    remote_port: int
+    state: str
+    observed_in_file: str = ""
+    line_number: int = 0
+
+
+@dataclass
 class Flow:
     id: str
     server_host_id: str
@@ -57,12 +73,12 @@ class Flow:
     port: int
     classification: Classification
     service_name: str = ""
-    allowed_sources: list[str] = field(default_factory=list)
     client_host_id: Optional[str] = None
     client_address: Optional[str] = None
     client_zone: str = "unknown"
     server_zone: str = "internal"
     direction: str = "inbound"
+    flow_kind: str = "listener"  # listener | session
 
 
 @dataclass
@@ -98,6 +114,7 @@ class RulesetArtifact:
 class AuditContext:
     hosts: list[Host] = field(default_factory=list)
     listeners: list[Listener] = field(default_factory=list)
+    connections: list[Connection] = field(default_factory=list)
     flows: list[Flow] = field(default_factory=list)
     findings: list[Finding] = field(default_factory=list)
     inputs: list[InputRecord] = field(default_factory=list)
