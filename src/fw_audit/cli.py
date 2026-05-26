@@ -14,7 +14,7 @@ import typer
 from fw_audit import __version__
 from fw_audit.classify.engine import ClassificationEngine, load_policy
 from fw_audit.graph.flows import build_flows, summary_counts
-from fw_audit.pipeline import run_audit, _discover_inputs
+from fw_audit.pipeline import run_audit, _discover_inputs  # noqa: F401
 from fw_audit.policy.loader import load_hosts
 from fw_audit.parsers.detector import parse_file
 
@@ -40,7 +40,7 @@ def ingest(
     hosts: Optional[Path] = typer.Option(None, "--hosts", help="hosts.yaml inventory"),
 ) -> None:
     """Validate inputs and print summary."""
-    for file_path, host_key in _discover_inputs(path):
+    for file_path, host_key in _discover_inputs(path)[0]:
         host = load_hosts(hosts).get(host_key)
         hid = host.id if host else "H001"
         listeners, connections, parser = parse_file(file_path, hid)
@@ -60,7 +60,7 @@ def analyze(
     engine = ClassificationEngine(pol)
     all_listeners = []
 
-    for file_path, host_key in _discover_inputs(path):
+    for file_path, host_key in _discover_inputs(path)[0]:
         host = hosts_map.get(host_key) or Host_fallback(hosts_map, host_key)
         listeners, connections, _ = parse_file(file_path, host.id)
         all_listeners.extend(listeners)

@@ -35,6 +35,41 @@ class Host:
 
 
 @dataclass
+class NetworkInterface:
+    name: str
+    kind: str  # ethernet, wifi, bluetooth, virtual, loopback, unknown
+    state: str  # up, down, unknown
+    ipv4_addresses: list[str] = field(default_factory=list)
+    gateway: Optional[str] = None
+    metric: Optional[int] = None
+    description: str = ""
+
+
+@dataclass
+class HostNetworkProfile:
+    host_id: str
+    default_gateway: Optional[str] = None
+    dns_servers: list[str] = field(default_factory=list)
+    interfaces: list[NetworkInterface] = field(default_factory=list)
+    source_file: str = ""
+
+
+@dataclass
+class OutboundServiceUse:
+    """Observed outbound usage (from active sessions) on a client/host."""
+
+    host_id: str
+    process_name: str
+    protocol: str
+    remote_address: str
+    remote_port: int
+    service_name: str = ""
+    classification: Classification = Classification.UNKNOWN
+    approved: bool = False
+    internet_facing: bool = False
+
+
+@dataclass
 class Listener:
     host_id: str
     protocol: str
@@ -60,6 +95,7 @@ class Connection:
     remote_address: str
     remote_port: int
     state: str
+    process_name: Optional[str] = None
     observed_in_file: str = ""
     line_number: int = 0
 
@@ -79,6 +115,7 @@ class Flow:
     server_zone: str = "internal"
     direction: str = "inbound"
     flow_kind: str = "listener"  # listener | session
+    process_name: Optional[str] = None
 
 
 @dataclass
@@ -119,6 +156,8 @@ class AuditContext:
     findings: list[Finding] = field(default_factory=list)
     inputs: list[InputRecord] = field(default_factory=list)
     rulesets: list[RulesetArtifact] = field(default_factory=list)
+    network_profiles: list[HostNetworkProfile] = field(default_factory=list)
+    outbound_services: list[OutboundServiceUse] = field(default_factory=list)
     policy_version: str = "1.0"
     operator: str = "home-lab"
     warnings: list[str] = field(default_factory=list)

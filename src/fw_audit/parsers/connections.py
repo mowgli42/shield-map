@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from fw_audit.models import Connection
+import re
+
 from fw_audit.parsers.common import normalize_protocol, parse_address_port
+
+_PROCESS_RE = re.compile(r'users:\(\("([^"]+)"')
 
 
 def parse_connections_windows(
@@ -64,6 +68,8 @@ def parse_connections_ss_linux(
         remote_addr, remote_port = parse_address_port(parts[5])
         if remote_port == 0:
             continue
+        proc_match = _PROCESS_RE.search(line)
+        process = proc_match.group(1) if proc_match else None
         connections.append(
             Connection(
                 host_id=host_id,
@@ -73,6 +79,7 @@ def parse_connections_ss_linux(
                 remote_address=remote_addr,
                 remote_port=remote_port,
                 state=state,
+                process_name=process,
                 observed_in_file=source_file,
                 line_number=line_no,
             )

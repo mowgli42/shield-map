@@ -19,3 +19,16 @@ categories:
     - { proto: tcp, port: 27017, service: mongodb }
     - { proto: tcp, port: 135, service: msrpc }
     - { proto: tcp, port: 139, service: netbios-ssn }
+
+outbound_whitelist:
+  enforce: false
+  trusted_gateways: []
+  trusted_dns: []
+  approved_outbound_ports:
+    - { proto: udp, port: 53, service: dns }
+    - { proto: tcp, port: 443, service: https }
+    - { proto: tcp, port: 80, service: http }
+  approved_processes: []
+  client_interface_policy:
+    wifi_allowed: true
+    bluetooth_allowed: true

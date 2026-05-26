@@ -1,0 +1,14 @@
+version: "1.0-home-whitelist"
+outbound_whitelist:
+  enforce: true
+  trusted_gateways:
+    - "192.168.1.1"
+  trusted_dns:
+    - "192.168.1.1"
+  approved_outbound_ports:
+    - { proto: udp, port: 53, service: dns }
+    - { proto: tcp, port: 443, service: https }
+  approved_processes: []
+  client_interface_policy:
+    wifi_allowed: false
+    bluetooth_allowed: false

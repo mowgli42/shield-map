@@ -23,12 +23,14 @@ def load_policy(path: Path | None = None) -> dict[str, Any]:
     if path and path.is_file():
         with path.open(encoding="utf-8") as fh:
             user = yaml.safe_load(fh) or {}
-        for key in ("categories", "rules", "approved_risky"):
+        for key in ("categories", "rules", "approved_risky", "outbound_whitelist"):
             if key in user:
                 if key == "categories":
                     for cat, entries in user.get("categories", {}).items():
                         policy.setdefault("categories", {}).setdefault(cat, [])
                         policy["categories"][cat].extend(entries)
+                elif key == "outbound_whitelist":
+                    policy.setdefault("outbound_whitelist", {}).update(user[key])
                 else:
                     policy[key] = user[key]
         if "version" in user:
