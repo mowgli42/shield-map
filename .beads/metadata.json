@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "shield_map",
+  "project_id": "a75e2771-97bd-4b18-b08e-9bb4e4256ba9"
+}
