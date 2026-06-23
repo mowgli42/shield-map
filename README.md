@@ -127,6 +127,20 @@ Inventory: [examples/dmz-lab/hosts.yaml](examples/dmz-lab/hosts.yaml) — `allow
 | `fw-audit all-in-one <path> -o out/` | Rules + XML + DOT (`--dot` / `--no-dot`) |
 | `fw-audit html audit-report.xml` | XSLT → HTML (requires `xsltproc`) |
 
+## Development and testing
+
+Use a virtual environment so `pip` is available on minimal Linux hosts (Arch, containers, CI):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
+pytest
+```
+
+CI runs the same steps via [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
 ## Status by phase
 
 | Phase | Features |
