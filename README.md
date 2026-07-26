@@ -20,7 +20,7 @@ flowchart TB
     CLASS[Classification\npreferred / risky / unsafe]
     GRAPH[Flow graph\nmulti-host zones]
     CROSS[Cross-zone findings]
-    GEN[Generators\nWindows / nftables / Cisco]
+    GEN[Generators\nWindows / nftables / Cisco / Fail2ban]
     XML[XML audit report]
     DOT[Graphviz DOT]
     XSLT[XSLT to HTML]
@@ -28,6 +28,7 @@ flowchart TB
 
   subgraph outputs [Outputs]
     RULES[Platform rulesets]
+    F2B[Fail2ban jail.d drop-ins]
     REPORT[audit-report.xml]
     HTML[audit-report.html]
     FLOW[network-dataflow.dot]
@@ -39,6 +40,7 @@ flowchart TB
   POLICY --> CLASS
   PARSE --> CLASS --> GRAPH --> CROSS
   CLASS --> GEN --> RULES
+  CLASS --> GEN --> F2B
   GRAPH --> XML --> REPORT
   XML --> XSLT --> HTML
   GRAPH --> DOT --> FLOW
@@ -137,9 +139,21 @@ Inventory: [examples/dmz-lab/hosts.yaml](examples/dmz-lab/hosts.yaml) — `allow
 | `fw-audit ingest <path>` | Validate inputs (listeners + sessions) |
 | `fw-audit analyze <path>` | Classify + findings (+ cross-zone) |
 | `fw-audit report <path> -o out/` | XML + `ports-protocols.json` (YAML/CSV sidecars) |
-| `fw-audit generate <path> -o out/` | Rulesets (`--platform windows\|nftables\|cisco\|all`) |
+| `fw-audit generate <path> -o out/` | Rulesets (`--platform windows\|nftables\|cisco\|fail2ban\|all`) |
 | `fw-audit all-in-one <path> -o out/` | Rules + XML + ports/protocols matrix + DOT (`--dot` / `--no-dot`) |
 | `fw-audit html audit-report.xml` | XSLT → HTML (requires `xsltproc`) |
+
+## Fail2ban composition
+
+fw-audit classifies listeners and drafts **deny-by-default** host firewall rules; it does **not** re-implement reactive banning. For every **preferred** / **risky** listener that policy still allows, `generate` / `all-in-one` (with `--platform nftables` or `all`) also emit a Fail2ban jail.d drop-in:
+
+```text
+out/<hostname>/jail.d/fw-audit.conf
+```
+
+- Uses the **nftables** ban actions (`nftables-multiport` / `nftables-allports`).
+- Jails with a stock filter (e.g. `sshd`, `nginx-http-auth`) are `enabled = true`; others are left disabled until you add a matching `filter.d` file.
+- Review, then copy to `/etc/fail2ban/jail.d/` on the host — same “review before apply” model as the firewall rulesets.
 
 ## Development and testing
 
@@ -162,6 +176,7 @@ CI runs the same steps via [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 | **1** | Parsers, classification, XML/XSLT, Windows + nftables |
 | **1a** | `init` wizard — client/server/services, mgmt CIDR restrictions |
 | **2** | Multi-host batch, TCP sessions, cross-zone findings, Cisco IOS ACL, Graphviz DOT |
+| **2b** | Fail2ban jail.d drop-ins for allowed preferred/risky ports (nftables backend) |
 | **3** | AWS / Azure / GCP (planned) |
 | **4** | diff, nmap XML, policy lint (planned) |
 

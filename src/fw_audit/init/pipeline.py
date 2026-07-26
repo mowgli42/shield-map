@@ -23,6 +23,7 @@ def run_init(
     platforms: list[str] | None = None,
     operator: str = "home-lab",
 ) -> AuditContext:
+    from fw_audit.generators.fail2ban import generate_fail2ban
     from fw_audit.generators.linux_nftables import generate_nftables
     from fw_audit.generators.windows import generate_windows
 
@@ -67,6 +68,11 @@ def run_init(
         count = generate_nftables(host, listeners, policy, path, init_mode=True)
         ctx.rulesets.append(_artifact("linux", "nftables", path, host.id, count))
 
+    if "fail2ban" in platforms or "nftables" in platforms:
+        path = host_out / "jail.d" / "fw-audit.conf"
+        count = generate_fail2ban(host, listeners, policy, path, init_mode=True)
+        ctx.rulesets.append(_artifact("fail2ban", "jail.d", path, host.id, count))
+
     write_audit_xml(ctx, output_dir / "audit-report.xml")
     _write_readme(output_dir, intent)
     return ctx
@@ -104,8 +110,9 @@ def _write_readme(output_dir: Path, intent: HostIntent) -> None:
         "",
         "NEXT STEPS:",
         "1. Review rules-*.ps1 or rules-nftables.conf",
-        "2. Apply during a maintenance window",
-        "3. Re-run 'fw-audit all-in-one' with netstat export to compare live vs plan",
+        "2. On Linux, review jail.d/fw-audit.conf and copy to /etc/fail2ban/jail.d/ if desired",
+        "3. Apply during a maintenance window",
+        "4. Re-run 'fw-audit all-in-one' with netstat export to compare live vs plan",
         "",
         "DO NOT apply blindly if you have existing custom firewall rules.",
     ]

@@ -60,6 +60,7 @@ def run_audit(
     export_dot: bool = True,
 ) -> AuditContext:
     from fw_audit.generators.cisco_ios import generate_cisco_ios
+    from fw_audit.generators.fail2ban import generate_fail2ban
     from fw_audit.generators.linux_nftables import generate_nftables
     from fw_audit.generators.windows import generate_windows
     from fw_audit.report.ports_protocols import write_ports_protocols
@@ -129,6 +130,11 @@ def run_audit(
             out = host_out / "rules-cisco-ios.acl"
             count = generate_cisco_ios(host, host_listeners, policy, out)
             ctx.rulesets.append(_artifact("cisco", "ios-acl", out, host.id, count))
+        # Fail2ban composes with nftables on Linux; emit with nftables/all/fail2ban.
+        if "fail2ban" in platforms or "nftables" in platforms:
+            out = host_out / "jail.d" / "fw-audit.conf"
+            count = generate_fail2ban(host, host_listeners, policy, out)
+            ctx.rulesets.append(_artifact("fail2ban", "jail.d", out, host.id, count))
 
     xml_path = output_dir / "audit-report.xml"
     write_audit_xml(ctx, xml_path)
