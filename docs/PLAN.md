@@ -535,6 +535,10 @@ firefox out/audit-report.html
 sudo nft -f out/nas01/rules-nftables.conf
 ```
 
+### Recommended operating composition (home-lab / SnarkSentinel)
+
+`fw-audit` drafts the **host firewall** layer (nftables or Windows Firewall). Pair it with **Fail2ban** on intentionally open ports, **OpenCanary** on unused ports, **Quad9** (`9.9.9.9`) filtered DNS, and optional IP blocklists. SnarkSentinel consumes the XML / rules / DOT outputs as evidence—it does not replace those controls. See README “Recommended composition”.
+
 ---
 
 ## 16. Success Metrics
