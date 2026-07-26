@@ -149,7 +149,10 @@ def generate(
         platforms=platforms,
     )
     for art in ctx.rulesets:
-        typer.echo(f"Ruleset: {art.path} ({art.rule_count} rules)")
+        if art.platform == "opencanary":
+            typer.echo(f"OpenCanary: {art.path} ({art.rule_count} suggested ports)")
+        else:
+            typer.echo(f"Ruleset: {art.path} ({art.rule_count} rules)")
 
 
 @app.command("html")
@@ -215,7 +218,10 @@ def all_in_one(
         typer.echo("Skipping HTML (install xsltproc for audit-report.html)")
 
     for art in ctx.rulesets:
-        typer.echo(f"Ruleset: {art.path}")
+        if art.platform == "opencanary":
+            typer.echo(f"OpenCanary: {art.path} ({art.rule_count} suggested ports)")
+        else:
+            typer.echo(f"Ruleset: {art.path}")
 
 
 def main() -> None:
