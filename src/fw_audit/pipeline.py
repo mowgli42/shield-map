@@ -62,6 +62,7 @@ def run_audit(
     from fw_audit.generators.cisco_ios import generate_cisco_ios
     from fw_audit.generators.linux_nftables import generate_nftables
     from fw_audit.generators.windows import generate_windows
+    from fw_audit.report.ports_protocols import write_ports_protocols
     from fw_audit.report.xml_builder import write_audit_xml
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -131,6 +132,9 @@ def run_audit(
 
     xml_path = output_dir / "audit-report.xml"
     write_audit_xml(ctx, xml_path)
+
+    matrix_paths = write_ports_protocols(ctx, output_dir)
+    ctx.warnings.append(f"Ports/protocols matrix: {matrix_paths['json']}")
 
     if export_dot:
         dot_path = output_dir / "network-dataflow.dot"

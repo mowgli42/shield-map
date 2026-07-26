@@ -16,6 +16,7 @@ def test_all_in_one_pipeline(tmp_path):
     )
     assert len(ctx.listeners) >= 4
     assert (out / "audit-report.xml").is_file()
+    assert (out / "ports-protocols.json").is_file()
     ps1 = list(out.rglob("rules-windows.ps1"))
     nft = list(out.rglob("rules-nftables.conf"))
     assert ps1
