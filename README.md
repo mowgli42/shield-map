@@ -126,6 +126,7 @@ Inventory: [examples/dmz-lab/hosts.yaml](examples/dmz-lab/hosts.yaml) — `allow
 | `fw-audit generate <path> -o out/` | Rulesets (`--platform windows\|nftables\|cisco\|all`) |
 | `fw-audit all-in-one <path> -o out/` | Rules + XML + DOT (`--dot` / `--no-dot`) |
 | `fw-audit html audit-report.xml` | XSLT → HTML (requires `xsltproc`) |
+| `fw-audit diff <baseline.xml> <current.xml>` | Drift vs baseline (`--format text\|json`) |
 
 ## Development and testing
 
@@ -149,7 +150,7 @@ CI runs the same steps via [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 | **1a** | `init` wizard — client/server/services, mgmt CIDR restrictions |
 | **2** | Multi-host batch, TCP sessions, cross-zone findings, Cisco IOS ACL, Graphviz DOT |
 | **3** | AWS / Azure / GCP (planned) |
-| **4** | diff, nmap XML, policy lint (planned) |
+| **4** | `diff` (XML drift); nmap XML, policy lint (planned) |
 
 ## Port categories (report colors)
 

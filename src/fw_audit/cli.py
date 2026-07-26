@@ -6,6 +6,7 @@ import json
 import shutil
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional
 
@@ -170,6 +171,50 @@ def html(
         check=True,
     )
     typer.echo(f"HTML: {out}")
+
+
+@app.command("diff")
+def diff_cmd(
+    baseline: Path = typer.Argument(..., help="Baseline audit-report.xml"),
+    current: Path = typer.Argument(..., help="Current audit-report.xml"),
+    format: str = typer.Option(
+        "text",
+        "--format",
+        "-f",
+        help="Output format: text or json (machine-parseable)",
+    ),
+    exit_code: bool = typer.Option(
+        True,
+        "--exit-code/--no-exit-code",
+        help="Exit 1 when drift findings are present",
+    ),
+) -> None:
+    """Compare two audit XML snapshots for configuration drift."""
+    from fw_audit.diff import diff_paths
+
+    if not baseline.is_file():
+        typer.echo(f"Baseline not found: {baseline}", err=True)
+        raise typer.Exit(2)
+    if not current.is_file():
+        typer.echo(f"Current not found: {current}", err=True)
+        raise typer.Exit(2)
+    if format not in ("text", "json"):
+        typer.echo("--format must be text or json", err=True)
+        raise typer.Exit(2)
+
+    try:
+        result = diff_paths(baseline, current)
+    except (ET.ParseError, ValueError, OSError) as exc:
+        typer.echo(f"Failed to diff reports: {exc}", err=True)
+        raise typer.Exit(2) from exc
+
+    if format == "json":
+        typer.echo(result.to_json())
+    else:
+        typer.echo(result.to_text())
+
+    if exit_code and result.drift_detected:
+        raise typer.Exit(1)
 
 
 @app.command("all-in-one")
