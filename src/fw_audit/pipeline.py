@@ -50,21 +50,13 @@ def _resolve_host(hosts_map: dict[str, Host], host_key: str, ctx_hosts: list[Hos
     return host
 
 
-def run_audit(
+def collect_audit(
     input_path: Path,
-    output_dir: Path,
     hosts_file: Path | None = None,
     policy_file: Path | None = None,
     operator: str = "home-lab",
-    platforms: list[str] | None = None,
-    export_dot: bool = True,
 ) -> AuditContext:
-    from fw_audit.generators.cisco_ios import generate_cisco_ios
-    from fw_audit.generators.linux_nftables import generate_nftables
-    from fw_audit.generators.windows import generate_windows
-    from fw_audit.report.xml_builder import write_audit_xml
-
-    output_dir.mkdir(parents=True, exist_ok=True)
+    """Ingest exports and classify without writing report/ruleset artifacts."""
     hosts_map = load_hosts(hosts_file)
     zone_policy = load_zone_policy(hosts_file)
     policy = load_policy(policy_file)
@@ -107,6 +99,31 @@ def run_audit(
         engine=engine,
     )
     ctx.findings.extend(cross_zone_findings(ctx.flows, hosts_by_id, zone_policy))
+    return ctx
+
+
+def run_audit(
+    input_path: Path,
+    output_dir: Path,
+    hosts_file: Path | None = None,
+    policy_file: Path | None = None,
+    operator: str = "home-lab",
+    platforms: list[str] | None = None,
+    export_dot: bool = True,
+) -> AuditContext:
+    from fw_audit.generators.cisco_ios import generate_cisco_ios
+    from fw_audit.generators.linux_nftables import generate_nftables
+    from fw_audit.generators.windows import generate_windows
+    from fw_audit.report.xml_builder import write_audit_xml
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    ctx = collect_audit(
+        input_path,
+        hosts_file=hosts_file,
+        policy_file=policy_file,
+        operator=operator,
+    )
+    policy = load_policy(policy_file)
 
     platforms = platforms or ["windows", "nftables"]
     for host in ctx.hosts:
