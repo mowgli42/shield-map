@@ -130,17 +130,11 @@ def generate(
     platform: str = typer.Option(
         "all",
         "--platform",
-        help="windows, nftables, cisco, or all",
+        help="windows, nftables, cisco, fail2ban, or all",
     ),
 ) -> None:
     """Generate firewall rulesets."""
-    platforms = []
-    if platform in ("all", "windows"):
-        platforms.append("windows")
-    if platform in ("all", "nftables", "linux"):
-        platforms.append("nftables")
-    if platform in ("all", "cisco"):
-        platforms.append("cisco")
+    platforms = _platforms_from_flag(platform)
     ctx = run_audit(
         path,
         output_dir,
@@ -149,7 +143,8 @@ def generate(
         platforms=platforms,
     )
     for art in ctx.rulesets:
-        typer.echo(f"Ruleset: {art.path} ({art.rule_count} rules)")
+        label = "jails" if art.format == "jail.d" else "rules"
+        typer.echo(f"Ruleset: {art.path} ({art.rule_count} {label})")
 
 
 @app.command("html")
@@ -183,13 +178,7 @@ def all_in_one(
     export_dot: bool = typer.Option(True, "--dot/--no-dot", help="Export Graphviz DOT"),
 ) -> None:
     """Generate rulesets, XML report, and HTML (if xsltproc available)."""
-    platforms = []
-    if platform in ("all", "windows"):
-        platforms.append("windows")
-    if platform in ("all", "nftables", "linux"):
-        platforms.append("nftables")
-    if platform in ("all", "cisco"):
-        platforms.append("cisco")
+    platforms = _platforms_from_flag(platform)
 
     ctx = run_audit(
         path,
@@ -216,6 +205,23 @@ def all_in_one(
 
     for art in ctx.rulesets:
         typer.echo(f"Ruleset: {art.path}")
+
+
+def _platforms_from_flag(platform: str) -> list[str]:
+    """Map --platform flag to generator platform list (backward compatible)."""
+    platforms: list[str] = []
+    if platform in ("all", "windows"):
+        platforms.append("windows")
+    if platform in ("all", "nftables", "linux"):
+        platforms.append("nftables")
+    if platform in ("all", "cisco"):
+        platforms.append("cisco")
+    if platform in ("all", "fail2ban"):
+        platforms.append("fail2ban")
+    # nftables alone also pulls Fail2ban drop-ins (nftables banaction).
+    if platform in ("nftables", "linux") and "fail2ban" not in platforms:
+        platforms.append("fail2ban")
+    return platforms
 
 
 def main() -> None:
