@@ -189,8 +189,20 @@ CI runs the same steps via [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 | **risky** | HTTP, RDP, SMB — restrict source or block |
 | **unsafe** | Telnet, open Docker API — deny + critical finding |
 
+## Library API (SnarkSentinel / embedders)
+
+Programmatic analyze, baseline diff, and local-only ruleset drafting — without
+scraping CLI output:
+
+```python
+from fw_audit import analyze, diff, generate_local_only
+```
+
+Contract and examples: [docs/INTEGRATION.md](docs/INTEGRATION.md).
+
 ## Documentation
 
+- [docs/INTEGRATION.md](docs/INTEGRATION.md) — library API for SnarkSentinel
 - [docs/PLAN.md](docs/PLAN.md) — full roadmap
 - [docs/GAP-ANALYSIS.md](docs/GAP-ANALYSIS.md) — comparison vs GATEKEEP, fwbuilder, net-guardian, etc.
 - [docs/schema/network-audit.xsd](docs/schema/network-audit.xsd) — audit XML schema
