@@ -109,7 +109,7 @@ def report(
     policy: Optional[Path] = typer.Option(None, "--policy"),
     operator: str = typer.Option("home-lab", "--operator"),
 ) -> None:
-    """Generate XML audit report only."""
+    """Generate XML audit report and ports/protocols matrix."""
     run_audit(
         path,
         output_dir,
@@ -119,6 +119,7 @@ def report(
         platforms=[],
     )
     typer.echo(f"Report: {output_dir / 'audit-report.xml'}")
+    typer.echo(f"Ports/protocols: {output_dir / 'ports-protocols.json'}")
 
 
 @app.command("generate")
@@ -182,7 +183,7 @@ def all_in_one(
     platform: str = typer.Option("all", "--platform"),
     export_dot: bool = typer.Option(True, "--dot/--no-dot", help="Export Graphviz DOT"),
 ) -> None:
-    """Generate rulesets, XML report, and HTML (if xsltproc available)."""
+    """Generate rulesets, XML report, ports/protocols matrix, and HTML (if xsltproc available)."""
     platforms = []
     if platform in ("all", "windows"):
         platforms.append("windows")
@@ -202,6 +203,7 @@ def all_in_one(
     )
     xml_path = output_dir / "audit-report.xml"
     typer.echo(f"XML report: {xml_path}")
+    typer.echo(f"Ports/protocols: {output_dir / 'ports-protocols.json'}")
     typer.echo(f"Listeners: {len(ctx.listeners)} | Findings: {len(ctx.findings)}")
 
     if shutil.which("xsltproc"):

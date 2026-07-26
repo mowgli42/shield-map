@@ -122,9 +122,9 @@ Inventory: [examples/dmz-lab/hosts.yaml](examples/dmz-lab/hosts.yaml) — `allow
 | `fw-audit init` | Phase 1a — secure baseline from questionnaire |
 | `fw-audit ingest <path>` | Validate inputs (listeners + sessions) |
 | `fw-audit analyze <path>` | Classify + findings (+ cross-zone) |
-| `fw-audit report <path> -o out/` | XML only |
+| `fw-audit report <path> -o out/` | XML + `ports-protocols.json` (YAML/CSV sidecars) |
 | `fw-audit generate <path> -o out/` | Rulesets (`--platform windows\|nftables\|cisco\|all`) |
-| `fw-audit all-in-one <path> -o out/` | Rules + XML + DOT (`--dot` / `--no-dot`) |
+| `fw-audit all-in-one <path> -o out/` | Rules + XML + ports/protocols matrix + DOT (`--dot` / `--no-dot`) |
 | `fw-audit html audit-report.xml` | XSLT → HTML (requires `xsltproc`) |
 
 ## Development and testing
