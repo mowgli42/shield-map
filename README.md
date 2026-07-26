@@ -20,16 +20,20 @@ flowchart TB
     CLASS[Classification\npreferred / risky / unsafe]
     GRAPH[Flow graph\nmulti-host zones]
     CROSS[Cross-zone findings]
-    GEN[Generators\nWindows / nftables / Cisco / Fail2ban]
+    GEN[Generators\nWindows / nftables / Cisco\nFail2ban / OpenCanary]
     XML[XML audit report]
+    MATRIX[ports-protocols matrix]
     DOT[Graphviz DOT]
     XSLT[XSLT to HTML]
+    DIFF[diff baseline vs current]
   end
 
   subgraph outputs [Outputs]
     RULES[Platform rulesets]
     F2B[Fail2ban jail.d drop-ins]
+    CANARY[OpenCanary suggestions]
     REPORT[audit-report.xml]
+    PP[ports-protocols.json]
     HTML[audit-report.html]
     FLOW[network-dataflow.dot]
   end
@@ -41,9 +45,12 @@ flowchart TB
   PARSE --> CLASS --> GRAPH --> CROSS
   CLASS --> GEN --> RULES
   CLASS --> GEN --> F2B
+  CLASS --> GEN --> CANARY
   GRAPH --> XML --> REPORT
+  GRAPH --> MATRIX --> PP
   XML --> XSLT --> HTML
   GRAPH --> DOT --> FLOW
+  REPORT --> DIFF
 ```
 
 ## Recommended composition
@@ -58,7 +65,7 @@ For home-lab / SnarkSentinel use, treat `fw-audit` as the host-firewall planner 
 | **Quad9 DNS** | Use `9.9.9.9` (or Quad9 DoH/DoT) as filtered, privacy-respecting recursive DNS to block many malicious domains |
 | **Optional IP blocklists** | Feed known-bad networks into the firewall or upstream filter when you need extra deny lists |
 
-**SnarkSentinel** consumes the audit artifacts (XML findings, rulesets, and the multi-host flow graph) as evidence and planning input; it does not replace Fail2ban, OpenCanary, or DNS filtering.
+**SnarkSentinel** consumes the audit artifacts (XML findings, `ports-protocols.json`, rulesets, OpenCanary suggestions, and the multi-host flow graph) via the [library API](docs/INTEGRATION.md); it does not replace Fail2ban, OpenCanary, or DNS filtering.
 
 ## Workflows
 
@@ -177,9 +184,9 @@ CI runs the same steps via [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 | **1** | Parsers, classification, XML/XSLT, Windows + nftables |
 | **1a** | `init` wizard — client/server/services, mgmt CIDR restrictions |
 | **2** | Multi-host batch, TCP sessions, cross-zone findings, Cisco IOS ACL, Graphviz DOT |
-| **2b** | Fail2ban jail.d drop-ins for allowed preferred/risky ports (nftables backend) |
+| **2b** | Fail2ban jail.d + OpenCanary suggestions; `ports-protocols.json` matrix |
 | **3** | AWS / Azure / GCP (planned) |
-| **4** | `diff` (XML drift); nmap XML, policy lint (planned) |
+| **4** | `diff` (XML/matrix drift) + library API; nmap XML, policy lint (planned) |
 
 ## Port categories (report colors)
 
