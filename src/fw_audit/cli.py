@@ -144,8 +144,7 @@ def generate(
         platforms=platforms,
     )
     for art in ctx.rulesets:
-        label = "jails" if art.format == "jail.d" else "rules"
-        typer.echo(f"Ruleset: {art.path} ({art.rule_count} {label})")
+        _echo_artifact(art)
 
 
 @app.command("html")
@@ -206,7 +205,17 @@ def all_in_one(
         typer.echo("Skipping HTML (install xsltproc for audit-report.html)")
 
     for art in ctx.rulesets:
-        typer.echo(f"Ruleset: {art.path}")
+        _echo_artifact(art)
+
+
+def _echo_artifact(art) -> None:
+    """Print a generated artifact with a type-appropriate label."""
+    if art.platform == "opencanary":
+        typer.echo(f"OpenCanary: {art.path} ({art.rule_count} suggested ports)")
+    elif art.format == "jail.d":
+        typer.echo(f"Fail2ban: {art.path} ({art.rule_count} jails)")
+    else:
+        typer.echo(f"Ruleset: {art.path} ({art.rule_count} rules)")
 
 
 def _platforms_from_flag(platform: str) -> list[str]:

@@ -110,6 +110,8 @@ def run_audit(
     )
     ctx.findings.extend(cross_zone_findings(ctx.flows, hosts_by_id, zone_policy))
 
+    from fw_audit.generators.opencanary import generate_opencanary
+
     platforms = platforms or ["windows", "nftables"]
     for host in ctx.hosts:
         host_listeners = [ln for ln in ctx.listeners if ln.host_id == host.id]
@@ -135,6 +137,17 @@ def run_audit(
             out = host_out / "jail.d" / "fw-audit.conf"
             count = generate_fail2ban(host, host_listeners, policy, out)
             ctx.rulesets.append(_artifact("fail2ban", "jail.d", out, host.id, count))
+
+        # Deception suggestions for unused high-value ports (not a firewall platform).
+        count, conf_path, ports_path = generate_opencanary(
+            host, host_listeners, policy, host_out
+        )
+        ctx.rulesets.append(
+            _artifact("opencanary", "opencanary-conf", conf_path, host.id, count)
+        )
+        ctx.rulesets.append(
+            _artifact("opencanary", "opencanary-ports", ports_path, host.id, count)
+        )
 
     xml_path = output_dir / "audit-report.xml"
     write_audit_xml(ctx, xml_path)
