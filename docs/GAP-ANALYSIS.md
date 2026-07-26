@@ -31,7 +31,7 @@ Research date: 2026. Comparison against open-source tools to inform Phase 3–4 
 | Gap | Seen in | Recommendation |
 |-----|---------|----------------|
 | **Live discovery** | GATEKEEP, net-guardian | Optional nmap/ARP ingest (Phase 4) |
-| **Scan vs baseline diff** | GATEKEEP baselines, net-guardian history | `fw-audit diff` on two XML reports (Phase 4) |
+| **Scan vs baseline diff** | GATEKEEP baselines, net-guardian history | `fw-audit diff` on two XML reports (text + JSON) |
 | **AWS/Azure/GCP rules** | IPparse, Aerleon | Phase 3 cloud generators |
 | **Rule shadowing / duplicate detection** | Aerleon, fwbuilder | Lint module on generated ACLs |
 | **Deploy / rollback** | fwbuilder SSH deploy | Out of scope; document “review then apply” only |

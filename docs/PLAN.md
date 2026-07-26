@@ -483,7 +483,7 @@ fw-audit all-in-one <path>          # rules + xml + html (home default)
 
 ### Phase 4 — Operational polish (home lab)
 
-- [ ] `fw-audit diff` — compare two audit XML snapshots
+- [x] `fw-audit diff` — compare two audit XML snapshots (unsafe/risky listeners, classification changes, cross-zone flows; text + JSON)
 - [ ] Optional nmap XML import
 - [ ] Policy lint (`fw-audit policy validate`)
 - [ ] Pre-commit hook example for exported reports

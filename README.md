@@ -142,6 +142,7 @@ Inventory: [examples/dmz-lab/hosts.yaml](examples/dmz-lab/hosts.yaml) — `allow
 | `fw-audit generate <path> -o out/` | Rulesets (`--platform windows\|nftables\|cisco\|fail2ban\|all`) |
 | `fw-audit all-in-one <path> -o out/` | Rules + XML + ports/protocols matrix + DOT (`--dot` / `--no-dot`) |
 | `fw-audit html audit-report.xml` | XSLT → HTML (requires `xsltproc`) |
+| `fw-audit diff <baseline.xml> <current.xml>` | Drift vs baseline (`--format text\|json`) |
 
 ## Fail2ban composition
 
@@ -178,7 +179,7 @@ CI runs the same steps via [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 | **2** | Multi-host batch, TCP sessions, cross-zone findings, Cisco IOS ACL, Graphviz DOT |
 | **2b** | Fail2ban jail.d drop-ins for allowed preferred/risky ports (nftables backend) |
 | **3** | AWS / Azure / GCP (planned) |
-| **4** | diff, nmap XML, policy lint (planned) |
+| **4** | `diff` (XML drift); nmap XML, policy lint (planned) |
 
 ## Port categories (report colors)
 
