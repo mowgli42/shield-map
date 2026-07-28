@@ -32,3 +32,16 @@ Maps `fw-audit` XML elements and CLI behaviors to audit frameworks. Use this whe
 - `addressed` — finding absent or fully mitigated in proposed rules
 - `partial` — rules proposed; not yet applied (operational gap)
 - `not_applicable` — host role excludes control (document `justification`)
+
+## Ports-and-protocols matrix (`ports-protocols.json`)
+
+Emitted on every `report` / `all-in-one` run alongside the XML report (YAML/CSV sidecars included). Lightweight evidence for FedRAMP-style boundary narratives and downstream consumers without XPath.
+
+| Field | Purpose |
+|-------|---------|
+| `host`, `zone`, `role` | Inventory context (CIS 1.x / SC-7 zones) |
+| `protocol`, `port`, `service`, `bind_address` | Listener identity |
+| `classification` | preferred / risky / unsafe / unknown |
+| `allowed_sources` | Source restrictions when set (init / policy) |
+| `observed_vs_planned` | `observed` (netstat) vs `planned` (init wizard) |
+| `control_tags` | CIS / NIST tags (e.g. `CIS:12.4`, `NIST:AC-4`, `NIST:SC-7`) |

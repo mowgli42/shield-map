@@ -6,6 +6,7 @@ import json
 import shutil
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional
 
@@ -109,7 +110,7 @@ def report(
     policy: Optional[Path] = typer.Option(None, "--policy"),
     operator: str = typer.Option("home-lab", "--operator"),
 ) -> None:
-    """Generate XML audit report only."""
+    """Generate XML audit report and ports/protocols matrix."""
     run_audit(
         path,
         output_dir,
@@ -119,6 +120,7 @@ def report(
         platforms=[],
     )
     typer.echo(f"Report: {output_dir / 'audit-report.xml'}")
+    typer.echo(f"Ports/protocols: {output_dir / 'ports-protocols.json'}")
 
 
 @app.command("generate")
@@ -130,17 +132,11 @@ def generate(
     platform: str = typer.Option(
         "all",
         "--platform",
-        help="windows, nftables, cisco, or all",
+        help="windows, nftables, cisco, fail2ban, or all",
     ),
 ) -> None:
     """Generate firewall rulesets."""
-    platforms = []
-    if platform in ("all", "windows"):
-        platforms.append("windows")
-    if platform in ("all", "nftables", "linux"):
-        platforms.append("nftables")
-    if platform in ("all", "cisco"):
-        platforms.append("cisco")
+    platforms = _platforms_from_flag(platform)
     ctx = run_audit(
         path,
         output_dir,
@@ -149,7 +145,7 @@ def generate(
         platforms=platforms,
     )
     for art in ctx.rulesets:
-        typer.echo(f"Ruleset: {art.path} ({art.rule_count} rules)")
+        _echo_artifact(art)
 
 
 @app.command("html")
@@ -172,6 +168,50 @@ def html(
     typer.echo(f"HTML: {out}")
 
 
+@app.command("diff")
+def diff_cmd(
+    baseline: Path = typer.Argument(..., help="Baseline audit-report.xml"),
+    current: Path = typer.Argument(..., help="Current audit-report.xml"),
+    format: str = typer.Option(
+        "text",
+        "--format",
+        "-f",
+        help="Output format: text or json (machine-parseable)",
+    ),
+    exit_code: bool = typer.Option(
+        True,
+        "--exit-code/--no-exit-code",
+        help="Exit 1 when drift findings are present",
+    ),
+) -> None:
+    """Compare two audit XML snapshots for configuration drift."""
+    from fw_audit.diff import diff_paths
+
+    if not baseline.is_file():
+        typer.echo(f"Baseline not found: {baseline}", err=True)
+        raise typer.Exit(2)
+    if not current.is_file():
+        typer.echo(f"Current not found: {current}", err=True)
+        raise typer.Exit(2)
+    if format not in ("text", "json"):
+        typer.echo("--format must be text or json", err=True)
+        raise typer.Exit(2)
+
+    try:
+        result = diff_paths(baseline, current)
+    except (ET.ParseError, ValueError, OSError) as exc:
+        typer.echo(f"Failed to diff reports: {exc}", err=True)
+        raise typer.Exit(2) from exc
+
+    if format == "json":
+        typer.echo(result.to_json())
+    else:
+        typer.echo(result.to_text())
+
+    if exit_code and result.drift_detected:
+        raise typer.Exit(1)
+
+
 @app.command("all-in-one")
 def all_in_one(
     path: Path = typer.Argument(..., help="Input file or directory"),
@@ -182,14 +222,8 @@ def all_in_one(
     platform: str = typer.Option("all", "--platform"),
     export_dot: bool = typer.Option(True, "--dot/--no-dot", help="Export Graphviz DOT"),
 ) -> None:
-    """Generate rulesets, XML report, and HTML (if xsltproc available)."""
-    platforms = []
-    if platform in ("all", "windows"):
-        platforms.append("windows")
-    if platform in ("all", "nftables", "linux"):
-        platforms.append("nftables")
-    if platform in ("all", "cisco"):
-        platforms.append("cisco")
+    """Generate rulesets, XML report, ports/protocols matrix, and HTML (if xsltproc available)."""
+    platforms = _platforms_from_flag(platform)
 
     ctx = run_audit(
         path,
@@ -202,6 +236,7 @@ def all_in_one(
     )
     xml_path = output_dir / "audit-report.xml"
     typer.echo(f"XML report: {xml_path}")
+    typer.echo(f"Ports/protocols: {output_dir / 'ports-protocols.json'}")
     typer.echo(f"Listeners: {len(ctx.listeners)} | Findings: {len(ctx.findings)}")
 
     if shutil.which("xsltproc"):
@@ -215,7 +250,34 @@ def all_in_one(
         typer.echo("Skipping HTML (install xsltproc for audit-report.html)")
 
     for art in ctx.rulesets:
-        typer.echo(f"Ruleset: {art.path}")
+        _echo_artifact(art)
+
+
+def _echo_artifact(art) -> None:
+    """Print a generated artifact with a type-appropriate label."""
+    if art.platform == "opencanary":
+        typer.echo(f"OpenCanary: {art.path} ({art.rule_count} suggested ports)")
+    elif art.format == "jail.d":
+        typer.echo(f"Fail2ban: {art.path} ({art.rule_count} jails)")
+    else:
+        typer.echo(f"Ruleset: {art.path} ({art.rule_count} rules)")
+
+
+def _platforms_from_flag(platform: str) -> list[str]:
+    """Map --platform flag to generator platform list (backward compatible)."""
+    platforms: list[str] = []
+    if platform in ("all", "windows"):
+        platforms.append("windows")
+    if platform in ("all", "nftables", "linux"):
+        platforms.append("nftables")
+    if platform in ("all", "cisco"):
+        platforms.append("cisco")
+    if platform in ("all", "fail2ban"):
+        platforms.append("fail2ban")
+    # nftables alone also pulls Fail2ban drop-ins (nftables banaction).
+    if platform in ("nftables", "linux") and "fail2ban" not in platforms:
+        platforms.append("fail2ban")
+    return platforms
 
 
 def main() -> None:

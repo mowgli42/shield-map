@@ -1,1 +1,1 @@
-"""Platform-specific firewall ruleset generators."""
+"""Platform-specific firewall ruleset and Fail2ban jail generators."""

@@ -50,21 +50,13 @@ def _resolve_host(hosts_map: dict[str, Host], host_key: str, ctx_hosts: list[Hos
     return host
 
 
-def run_audit(
+def collect_audit(
     input_path: Path,
-    output_dir: Path,
     hosts_file: Path | None = None,
     policy_file: Path | None = None,
     operator: str = "home-lab",
-    platforms: list[str] | None = None,
-    export_dot: bool = True,
 ) -> AuditContext:
-    from fw_audit.generators.cisco_ios import generate_cisco_ios
-    from fw_audit.generators.linux_nftables import generate_nftables
-    from fw_audit.generators.windows import generate_windows
-    from fw_audit.report.xml_builder import write_audit_xml
-
-    output_dir.mkdir(parents=True, exist_ok=True)
+    """Ingest exports and classify without writing report/ruleset artifacts."""
     hosts_map = load_hosts(hosts_file)
     zone_policy = load_zone_policy(hosts_file)
     policy = load_policy(policy_file)
@@ -107,6 +99,34 @@ def run_audit(
         engine=engine,
     )
     ctx.findings.extend(cross_zone_findings(ctx.flows, hosts_by_id, zone_policy))
+    return ctx
+
+
+def run_audit(
+    input_path: Path,
+    output_dir: Path,
+    hosts_file: Path | None = None,
+    policy_file: Path | None = None,
+    operator: str = "home-lab",
+    platforms: list[str] | None = None,
+    export_dot: bool = True,
+) -> AuditContext:
+    from fw_audit.generators.cisco_ios import generate_cisco_ios
+    from fw_audit.generators.fail2ban import generate_fail2ban
+    from fw_audit.generators.linux_nftables import generate_nftables
+    from fw_audit.generators.opencanary import generate_opencanary
+    from fw_audit.generators.windows import generate_windows
+    from fw_audit.report.ports_protocols import write_ports_protocols
+    from fw_audit.report.xml_builder import write_audit_xml
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    ctx = collect_audit(
+        input_path,
+        hosts_file=hosts_file,
+        policy_file=policy_file,
+        operator=operator,
+    )
+    policy = load_policy(policy_file)
 
     platforms = platforms or ["windows", "nftables"]
     for host in ctx.hosts:
@@ -128,9 +148,28 @@ def run_audit(
             out = host_out / "rules-cisco-ios.acl"
             count = generate_cisco_ios(host, host_listeners, policy, out)
             ctx.rulesets.append(_artifact("cisco", "ios-acl", out, host.id, count))
+        # Fail2ban composes with nftables on Linux; emit with nftables/all/fail2ban.
+        if "fail2ban" in platforms or "nftables" in platforms:
+            out = host_out / "jail.d" / "fw-audit.conf"
+            count = generate_fail2ban(host, host_listeners, policy, out)
+            ctx.rulesets.append(_artifact("fail2ban", "jail.d", out, host.id, count))
+
+        # Deception suggestions for unused high-value ports (not a firewall platform).
+        count, conf_path, ports_path = generate_opencanary(
+            host, host_listeners, policy, host_out
+        )
+        ctx.rulesets.append(
+            _artifact("opencanary", "opencanary-conf", conf_path, host.id, count)
+        )
+        ctx.rulesets.append(
+            _artifact("opencanary", "opencanary-ports", ports_path, host.id, count)
+        )
 
     xml_path = output_dir / "audit-report.xml"
     write_audit_xml(ctx, xml_path)
+
+    matrix_paths = write_ports_protocols(ctx, output_dir)
+    ctx.warnings.append(f"Ports/protocols matrix: {matrix_paths['json']}")
 
     if export_dot:
         dot_path = output_dir / "network-dataflow.dot"
