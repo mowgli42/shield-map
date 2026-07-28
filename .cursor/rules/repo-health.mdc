@@ -1,0 +1,21 @@
+---
+description: Repo Health Loop success criteria and fix-lane constraints
+alwaysApply: true
+---
+
+# Repo Health
+
+When working on `[Health]` issues or docs/spec/deploy gaps, treat these as the bar:
+
+1. **Functional** — Production/preview URL returns OK; primary flows work.
+2. **Process & spec** — OpenSpec (or equivalent) and Gherkin match current code; tracking reflects remaining work.
+3. **Documentation UX** — README order: summary → screenshot(s) → architecture diagram → sequence diagram(s) → remaining capabilities. No wall-of-text first.
+4. **Stack** — Prefer Svelte + FastAPI + SQLite/Redis + structured/OTEL-friendly logging; document exceptions.
+5. **No silent rot** — Broken imports, missing example env files, dead links, and obvious debt become issues or get fixed — not ignored.
+6. **Issues are written** — Gaps use the health issue template (Gap / Evidence / Criterion / Suggested Fix / Priority).
+
+## Fix-lane behavior
+
+- One issue → one focused PR; cite `Closes #N`.
+- Prefer skills: `fix-health-gap`, `update-readme-docs`, `sync-openspec-gherkin`, `vercel-health-check`.
+- Canonical criteria live in this infrastructure repo’s `SUCCESS_CRITERIA.md` when present; otherwise follow this rule.
