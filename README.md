@@ -177,6 +177,15 @@ pytest
 
 CI runs the same steps via [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
+Behavior scenarios (Gherkin, documentation-only — no Cucumber runner) live under [`features/`](features/):
+
+| Feature | Happy paths |
+|---------|-------------|
+| [`init.feature`](features/init.feature) | `fw-audit init` baseline from answers YAML |
+| [`all-in-one.feature`](features/all-in-one.feature) | `all-in-one` / `report` / `generate` on fixtures + DMZ examples |
+| [`diff.feature`](features/diff.feature) | `fw-audit diff` drift vs baseline XML |
+| [`library-api.feature`](features/library-api.feature) | `analyze` / `diff` / `generate_local_only` contract |
+
 ## Status by phase
 
 | Phase | Features |
@@ -209,6 +218,7 @@ Contract and examples: [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Documentation
 
+- [features/](features/) — Gherkin scenarios for core CLI and library happy paths
 - [docs/INTEGRATION.md](docs/INTEGRATION.md) — library API for SnarkSentinel
 - [docs/PLAN.md](docs/PLAN.md) — full roadmap
 - [docs/GAP-ANALYSIS.md](docs/GAP-ANALYSIS.md) — comparison vs GATEKEEP, fwbuilder, net-guardian, etc.
