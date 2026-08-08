@@ -9,6 +9,8 @@ description: >-
 # Fix Health Gap
 
 Close one Critic-approved health issue with a focused PR. Do not expand scope.
+Apply [Ponytail](https://github.com/DietrichGebert/ponytail) minimalism: smallest
+working change; no unrequested abstractions or dependencies.
 
 ## Inputs
 
@@ -21,21 +23,23 @@ Prefer the triggering GitHub issue. Extract:
 5. **Priority** — Blocker / High / Medium / Low
 
 If the issue body is incomplete, inspect the repo against
-`.cursor/rules/repo-health.mdc` (or `SUCCESS_CRITERIA.md` when this skill pack
-is present) before changing code.
+`.cursor/rules/repo-health.mdc` and `.cursor/rules/ponytail.mdc` (or
+`SUCCESS_CRITERIA.md` when this skill pack is present) before changing code.
 
 ## Workflow
 
 1. **Confirm scope** — Fix only the stated gap. Skip “while I’m here” cleanups.
-2. **Route by criterion** — Use a specialized skill when it fits:
+2. **Climb the Ponytail ladder** before writing code:
+   YAGNI → reuse in-repo → stdlib → native platform → installed dep → one-liner → minimal implementation.
+3. **Route by criterion** — Use a specialized skill when it fits:
    - Documentation UX → `update-readme-docs`
    - OpenSpec / Gherkin drift → `sync-openspec-gherkin`
    - Live deploy / HTTP failures → `vercel-health-check` (then fix)
-3. **Implement the smallest change** that resolves the evidence.
-4. **Verify** — Run the lightest check that proves the gap is gone (link check,
+4. **Implement the smallest change** that resolves the evidence.
+5. **Verify** — Run the lightest check that proves the gap is gone (link check,
    `curl` for HTTP 200, open the README sections, run targeted tests if needed).
-5. **Open a PR** that closes the issue (`Closes #N` / `Fixes #N`).
-6. **PR description** — Gap addressed, criterion cited, what changed, how verified.
+6. **Open a PR** that closes the issue (`Closes #N` / `Fixes #N`).
+7. **PR description** — Gap addressed, criterion cited, what changed, how verified.
 
 ## Rules
 
@@ -43,6 +47,7 @@ is present) before changing code.
 - Do not rewrite the whole project or invent new product features.
 - Stack preference when creating new surface area: Svelte + FastAPI + SQLite/Redis
   + structured / OTEL-friendly logging. Document exceptions instead of silent drift.
+- Never skip validation, error handling, security, or accessibility to save lines.
 - If blocked (missing secrets, private deploy access), comment on the issue with
   what is needed and stop — do not open an empty PR.
 
@@ -50,3 +55,4 @@ is present) before changing code.
 
 - Evidence from the issue no longer holds
 - PR links the issue and stays within the Suggested Fix intent
+- Diff is the smallest change that correctly fixes the gap
