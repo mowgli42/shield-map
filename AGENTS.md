@@ -3,7 +3,8 @@
 ## Project context
 
 shield-map is the `fw-audit` netstat/port audit CLI.
-Start with `README.md`, `pyproject.toml`, and `tests/` before editing behavior.
+Start with `README.md`, `openspec/spec.md` (current capabilities), `pyproject.toml`, and `tests/` before editing behavior.
+When shipping or removing a public surface, update `openspec/spec.md` so it stays aligned with code.
 
 ## Local setup
 
