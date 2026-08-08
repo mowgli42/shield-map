@@ -13,9 +13,11 @@ When working on `[Health]` issues or docs/spec/deploy gaps, treat these as the b
 4. **Stack** — Prefer Svelte + FastAPI + SQLite/Redis + structured/OTEL-friendly logging; document exceptions.
 5. **No silent rot** — Broken imports, missing example env files, dead links, and obvious debt become issues or get fixed — not ignored.
 6. **Issues are written** — Gaps use the health issue template (Gap / Evidence / Criterion / Suggested Fix / Priority).
+7. **Ponytail minimalism** — Apply the decision ladder in `.cursor/rules/ponytail.mdc` (YAGNI → reuse → stdlib → native → installed dep → one-liner → minimal code). No unrequested abstractions or dependencies; never drop validation, error handling, security, or accessibility.
 
 ## Fix-lane behavior
 
 - One issue → one focused PR; cite `Closes #N`.
 - Prefer skills: `fix-health-gap`, `update-readme-docs`, `sync-openspec-gherkin`, `vercel-health-check`.
+- Implement Suggested Fixes with the **smallest** working change (Ponytail ladder).
 - Canonical criteria live in this infrastructure repo’s `SUCCESS_CRITERIA.md` when present; otherwise follow this rule.
