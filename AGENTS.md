@@ -26,6 +26,7 @@ python3 -m venv .venv
 - Add or update tests for CLI parsing and report output changes.
 - Keep command-line behavior backward compatible unless the task explicitly changes it.
 - Preserve existing local user changes; stage only files you intentionally modify.
+- Core happy-path behavior is documented as Gherkin under `features/`; update scenarios when CLI or library contracts change.
 
 ## Issue Tracking
 
