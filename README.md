@@ -209,6 +209,7 @@ Contract and examples: [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Documentation
 
+- [openspec/spec.md](openspec/spec.md) — current capabilities and architecture (OpenSpec)
 - [docs/INTEGRATION.md](docs/INTEGRATION.md) — library API for SnarkSentinel
 - [docs/PLAN.md](docs/PLAN.md) — full roadmap
 - [docs/GAP-ANALYSIS.md](docs/GAP-ANALYSIS.md) — comparison vs GATEKEEP, fwbuilder, net-guardian, etc.
