@@ -235,3 +235,20 @@ pytest -q
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE).
+
+## Outbound whitelisting and network posture
+
+**Today:** fw-audit can **audit** and **generate Linux egress rules** from an outbound port whitelist; it annotates each client’s **gateway**, **DNS servers**, **NICs** (Wi‑Fi / Bluetooth / virtual), and **internet-bound processes** in the XML report.
+
+| Capability | Status |
+|------------|--------|
+| Default-deny **outbound** (Linux clients) | `outbound_whitelist.enforce: true` in policy |
+| Trusted gateway / DNS checks | `trusted_gateways`, `trusted_dns` |
+| Wi‑Fi / Bluetooth routing risk | Findings when interfaces are up against policy |
+| Per-process internet usage | From `ss` exports → `OutboundClientServices` in XML |
+| Windows per-app block | **Not fully** — use WDAC/AppLocker; we generate port rules only |
+
+See [docs/OUTBOUND-WHITELIST.md](docs/OUTBOUND-WHITELIST.md) and [examples/home-lab/policy-outbound-whitelist.yaml](examples/home-lab/policy-outbound-whitelist.yaml).
+
+Collect profile data with [scripts/collect-linux.sh](scripts/collect-linux.sh) or `ipconfig /all` (Windows).
+

@@ -1,0 +1,9 @@
+# ip-route
+default via 192.168.1.1 dev eth0 proto dhcp src 192.168.1.10 metric 100
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.10
+# resolv.conf
+nameserver 192.168.1.1
+# ip-link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500
+3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500

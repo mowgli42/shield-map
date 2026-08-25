@@ -130,6 +130,45 @@ def write_audit_xml(ctx: AuditContext, output_path: Path) -> None:
             },
         )
 
+
+    profiles_el = ET.SubElement(root, _q("HostNetworkProfiles"))
+    for prof in ctx.network_profiles:
+        hp = ET.SubElement(profiles_el, _q("HostProfile"), {"hostRef": prof.host_id})
+        if prof.default_gateway:
+            ET.SubElement(hp, _q("DefaultGateway")).text = prof.default_gateway
+        dns_el = ET.SubElement(hp, _q("DnsServers"))
+        for dns in prof.dns_servers:
+            ET.SubElement(dns_el, _q("Server")).text = dns
+        ifaces_el = ET.SubElement(hp, _q("Interfaces"))
+        for iface in prof.interfaces:
+            ET.SubElement(
+                ifaces_el,
+                _q("Interface"),
+                {
+                    "name": iface.name,
+                    "kind": iface.kind,
+                    "state": iface.state,
+                    "gateway": iface.gateway or "",
+                },
+            ).text = ", ".join(iface.ipv4_addresses) or iface.description
+
+    outbound_el = ET.SubElement(root, _q("OutboundClientServices"))
+    for use in ctx.outbound_services:
+        ET.SubElement(
+            outbound_el,
+            _q("ServiceUse"),
+            {
+                "hostRef": use.host_id,
+                "process": use.process_name,
+                "protocol": use.protocol,
+                "remoteAddress": use.remote_address,
+                "remotePort": str(use.remote_port),
+                "classification": use.classification.value,
+                "approved": "true" if use.approved else "false",
+                "service": use.service_name,
+            },
+        )
+
     findings_el = ET.SubElement(root, _q("Findings"))
     for finding in sorted(
         ctx.findings, key=lambda f: ["critical", "high", "medium", "low", "info"].index(f.severity.value)

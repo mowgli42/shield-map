@@ -17,6 +17,18 @@ def _source_match(sources: list[str]) -> str:
     return "ip saddr @mgmt_allow "
 
 
+def _outbound_allow_lines(policy: dict[str, Any]) -> list[str]:
+    wl = policy.get("outbound_whitelist", {})
+    lines: list[str] = []
+    for item in wl.get("approved_outbound_ports", []):
+        if isinstance(item, dict):
+            proto = str(item.get("proto", "tcp")).lower()
+            port = int(item["port"])
+            svc = item.get("service", f"port-{port}")
+            lines.append(f"    {proto} dport {port} accept  # whitelist: {svc}")
+    return lines
+
+
 def generate_nftables(
     host: Host,
     listeners: list[Listener],
@@ -24,6 +36,7 @@ def generate_nftables(
     output_path: Path,
     *,
     init_mode: bool = False,
+    strict_outbound: bool = False,
 ) -> int:
     allow = listeners_to_allow(listeners, policy, init_mode=init_mode)
     inbound = [ln for ln in allow if ln.state != "planned-outbound"]
@@ -35,9 +48,13 @@ def generate_nftables(
             mgmt_addrs = ln.allowed_sources
             break
 
+    mode = "Phase 1a init baseline" if init_mode else "netstat audit"
+    if strict_outbound:
+        mode += " + outbound whitelist (default-deny egress)"
+
     lines = [
         ruleset_header("linux-nftables", host.hostname),
-        f"# Mode: {'Phase 1a init baseline' if init_mode else 'netstat audit'}",
+        f"# Mode: {mode}",
         "flush ruleset",
         "table inet fw_audit {",
     ]
@@ -74,7 +91,7 @@ def generate_nftables(
 
     lines.append("  }")
 
-    if outbound:
+    if outbound or strict_outbound:
         lines.extend(
             [
                 "  chain output {",
@@ -83,6 +100,11 @@ def generate_nftables(
                 "    oif lo accept",
             ]
         )
+        if strict_outbound:
+            lines.append("    # Outbound whitelist (CIS 12.4 egress control)")
+            for ol in _outbound_allow_lines(policy):
+                lines.append(ol)
+                rule_count += 1
         for ln in sorted(outbound, key=lambda x: (x.protocol, x.port)):
             lines.append(
                 f"    {ln.protocol} dport {ln.port} accept  # {ln.service_name} outbound"
