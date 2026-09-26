@@ -40,3 +40,7 @@ Quick reference:
 - `bd dolt push` - push Beads data when using a shared Beads remote
 
 For full workflow details, run `bd prime`.
+
+## Secrets
+
+Do not commit private keys, *-key.pem, *.key, .env secrets, or BEGIN … PRIVATE KEY. Generate locally; gitignore keys.
