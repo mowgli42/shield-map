@@ -4,6 +4,16 @@ Python CLI for **personal / home lab** use: ingest netstat or open-port exports 
 
 Aligned with **CIS Controls v8.1 (IG1)** and **NIST SP 800-53 Rev 5** (SC-7, AC-4) concepts — see [docs/PLAN.md](docs/PLAN.md) and [docs/compliance-mapping.md](docs/compliance-mapping.md).
 
+## Screenshots
+
+HTML audit report from the DMZ lab example (`fw-audit all-in-one` → XSLT):
+
+![HTML audit report — preferred / risky / unsafe summary and flows](docs/images/audit-report-html.png)
+
+CLI output for the same all-in-one run (rulesets, Fail2ban, OpenCanary per host):
+
+![fw-audit all-in-one CLI output](docs/images/all-in-one-cli.png)
+
 ## Architecture
 
 ```mermaid
