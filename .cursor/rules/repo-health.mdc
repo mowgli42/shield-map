@@ -13,11 +13,13 @@ When working on `[Health]` issues or docs/spec/deploy gaps, treat these as the b
 4. **Stack** — Prefer Svelte + FastAPI + SQLite/Redis + structured/OTEL-friendly logging; document exceptions.
 5. **No silent rot** — Broken imports, missing example env files, dead links, and obvious debt become issues or get fixed — not ignored.
 6. **Issues are written** — Gaps use the health issue template (Gap / Evidence / Criterion / Suggested Fix / Priority).
-7. **Ponytail minimalism** — Apply the decision ladder in `.cursor/rules/ponytail.mdc` (YAGNI → reuse → stdlib → native → installed dep → one-liner → minimal code). No unrequested abstractions or dependencies; never drop validation, error handling, security, or accessibility.
+7. **Age-based posture** — Repos younger than 30 days: follow `.cursor/skills/graham-bell/SKILL.md` (learning / prototype, E2E demo artifacts, living specs). Repos 30 days or older: apply the Ponytail ladder in `.cursor/rules/ponytail.mdc` (YAGNI → reuse → stdlib → native → installed dep → one-liner → minimal code). No unrequested abstractions or dependencies; never drop validation, error handling, security, or accessibility.
+8. **Custom AGENTS.md** — Root `AGENTS.md` must be specific to this repo (commands, prohibitions, verify-by-change-type, house vocabulary). The shared skill pack is not a substitute. Missing or generic files are a health gap. Tune with `tune-agents-md` and ossrules.md; keep the file short.
+9. **Secrets** — `HEAD` must not contain private keys, `*-key.pem`, `*.key`, or `BEGIN … PRIVATE KEY`. Score `secrets: clean | leaked | history-only`. Missing `scripts/scan-secrets.sh` + `.github/workflows/secrets.yml` is a Medium gap. Copy from `mowgli42/repo-health-loop` templates. Do not commit dummy keys.
 
 ## Fix-lane behavior
 
 - One issue → one focused PR; cite `Closes #N`.
-- Prefer skills: `fix-health-gap`, `update-readme-docs`, `sync-openspec-gherkin`, `vercel-health-check`.
-- Implement Suggested Fixes with the **smallest** working change (Ponytail ladder).
+- Prefer skills: `fix-health-gap`, `update-readme-docs`, `sync-openspec-gherkin`, `vercel-health-check`, `graham-bell`, `tune-agents-md`.
+- Implement Suggested Fixes with the **smallest** working change that still matches the age-selected posture.
 - Canonical criteria live in this infrastructure repo’s `SUCCESS_CRITERIA.md` when present; otherwise follow this rule.
