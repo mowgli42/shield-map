@@ -21,7 +21,10 @@ from fw_audit.parsers.detector import parse_file
 
 app = typer.Typer(
     name="fw-audit",
-    help="Firewall ruleset and network exposure audit tool (home lab).",
+    help=(
+        "shield-map library CLI (legacy name). "
+        "Prefer: shield-map, shield-up, shield-audit."
+    ),
     no_args_is_help=True,
 )
 
@@ -32,7 +35,7 @@ def _xslt_path() -> Path:
 
 @app.command("version")
 def version_cmd() -> None:
-    typer.echo(f"fw-audit {__version__}")
+    typer.echo(f"shield-map {__version__} (fw-audit package; prefer shield-map CLI)")
 
 
 @app.command("ingest")

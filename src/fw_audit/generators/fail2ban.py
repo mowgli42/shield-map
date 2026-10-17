@@ -25,7 +25,7 @@ _STOCK_FILTERS: dict[str, str] = {
 
 def _jail_name(ln: Listener) -> str:
     svc = (ln.service_name or ln.protocol).replace(" ", "-").lower()
-    return f"fw-audit-{svc}-{ln.port}"
+    return f"shield-map-{svc}-{ln.port}"
 
 
 def _filter_for(ln: Listener) -> tuple[str, bool]:
@@ -56,7 +56,7 @@ def generate_fail2ban(
     lines = [
         ruleset_header("fail2ban-jail.d", host.hostname),
         f"# Mode: {'Phase 1a init baseline' if init_mode else 'netstat audit'}",
-        "# Install: copy to /etc/fail2ban/jail.d/fw-audit.conf (Linux hosts)",
+        "# Install: copy to /etc/fail2ban/jail.d/shield-map.conf (Linux hosts)",
         "# Backend: nftables (banaction). Requires fail2ban + nftables.",
         "# REVIEW BEFORE APPLY — enable only jails whose filters match your daemons",
         "",

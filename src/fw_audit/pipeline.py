@@ -150,7 +150,7 @@ def run_audit(
             ctx.rulesets.append(_artifact("cisco", "ios-acl", out, host.id, count))
         # Fail2ban composes with nftables on Linux; emit with nftables/all/fail2ban.
         if "fail2ban" in platforms or "nftables" in platforms:
-            out = host_out / "jail.d" / "fw-audit.conf"
+            out = host_out / "jail.d" / "shield-map.conf"
             count = generate_fail2ban(host, host_listeners, policy, out)
             ctx.rulesets.append(_artifact("fail2ban", "jail.d", out, host.id, count))
 

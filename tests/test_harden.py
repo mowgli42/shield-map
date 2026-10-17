@@ -63,7 +63,9 @@ def test_scripts_tailored_per_family(tmp_path):
     host_out.mkdir()
     (host_out / "rules-nftables.conf").write_text("table inet x {}\n", encoding="utf-8")
     (host_out / "jail.d").mkdir()
-    (host_out / "jail.d" / "fw-audit.conf").write_text("[sshd]\nenabled=true\n", encoding="utf-8")
+    (host_out / "jail.d" / "shield-map.conf").write_text(
+        "[sshd]\nenabled=true\n", encoding="utf-8"
+    )
     (host_out / ".opencanary.conf").write_text("{}\n", encoding="utf-8")
     baseline = tmp_path / "audit-report.xml"
     baseline.write_text("<NetworkAuditReport/>\n", encoding="utf-8")
@@ -93,7 +95,7 @@ def test_scripts_tailored_per_family(tmp_path):
         assert PRIMARY_DNS in dns
         assert BACKUP_DNS in dns
         cron = scripts["setup_cron"].read_text(encoding="utf-8")
-        assert "fw-audit-drift" in cron
+        assert "shield-audit" in cron
         assert scripts["drift"].is_file()
 
 

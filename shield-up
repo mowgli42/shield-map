@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# shield-up — Linux harden: firewall + Fail2ban + optional OpenCanary/DNS + drift cron
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_shield_lib.sh
+source "${ROOT}/_shield_lib.sh"
+_shield_run_entry shield_up "$@"

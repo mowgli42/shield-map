@@ -1,12 +1,12 @@
-Feature: fw-audit all-in-one audit
+Feature: shield-map audit (all-in-one path)
   End-to-end audit from netstat/ss exports: classify listeners, emit
   rulesets, XML report, ports/protocols matrix, and optional DOT graph.
-  Aligns with `fw-audit all-in-one` / `fw_audit.pipeline.run_audit`.
-  Covered by `tests/test_pipeline.py` and `tests/test_phase2.py`.
+  Aligns with `shield-map` / `fw-audit all-in-one` / `fw_audit.pipeline.run_audit`.
+  Covered by `tests/test_pipeline.py`, `tests/test_phase2.py`, `tests/test_entrypoints.py`.
 
   Scenario: Single-host fixture produces report, matrix, and rulesets
     Given fixture export "tests/fixtures/netstat-windows.txt"
-    When the operator runs `fw-audit all-in-one <fixture> -o <out> --platform all`
+    When the operator runs `shield-map --input <fixture> -o <out> --platform all`
     Then `<out>/audit-report.xml` is a NetworkAuditReport
     And `<out>/ports-protocols.json` is written
     And Windows and nftables rulesets exist under `<out>/`

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# shield-audit — drift check vs baseline (cron-friendly; exit 1 on drift)
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_shield_lib.sh
+source "${ROOT}/_shield_lib.sh"
+_shield_run_entry shield_audit "$@"
