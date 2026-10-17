@@ -8,7 +8,13 @@ import pytest
 
 from fw_audit.harden.distro import DistroFamily, HostDistro, detect_distro
 from fw_audit.harden.pipeline import HardenOptions, run_harden
-from fw_audit.harden.scripts import BACKUP_DNS, PRIMARY_DNS, write_harden_scripts
+from fw_audit.harden.scripts import (
+    BACKUP_DNS,
+    DROP_CRON_SCHEDULE,
+    DROP_V4_URL,
+    PRIMARY_DNS,
+    write_harden_scripts,
+)
 from fw_audit.harden.stages import STAGE_ORDER, StageId, parse_stages
 
 FIXTURE_SS = Path(__file__).parent / "fixtures" / "ss-linux.txt"
@@ -54,6 +60,9 @@ def test_detect_rhel(tmp_path):
 def test_parse_stages_order_and_unknown():
     assert parse_stages(None) == list(STAGE_ORDER)
     assert parse_stages("cron,discover") == [StageId.DISCOVER, StageId.CRON]
+    assert parse_stages("spamhaus-drop") == [StageId.DROP]
+    assert StageId.DROP in STAGE_ORDER
+    assert STAGE_ORDER.index(StageId.DROP) < STAGE_ORDER.index(StageId.CRON)
     with pytest.raises(ValueError, match="Unknown stage"):
         parse_stages("firewall,nope")
 
@@ -97,6 +106,14 @@ def test_scripts_tailored_per_family(tmp_path):
         cron = scripts["setup_cron"].read_text(encoding="utf-8")
         assert "shield-audit" in cron
         assert scripts["drift"].is_file()
+        drop = scripts["setup_drop"].read_text(encoding="utf-8")
+        assert DROP_CRON_SCHEDULE in drop
+        assert "shield-drop-refresh" in drop
+        refresh = scripts["drop_refresh"].read_text(encoding="utf-8")
+        assert DROP_V4_URL in refresh
+        assert "shield_drop4" in refresh
+        assert "keeping previous set" in refresh
+        assert "curl" in scripts["install_deps"].read_text(encoding="utf-8")
 
 
 def test_harden_scripts_only_from_fixture(tmp_path):
@@ -115,6 +132,7 @@ def test_harden_scripts_only_from_fixture(tmp_path):
         ),
         install_opencanary=False,
         update_dns=False,
+        install_drop=False,
     )
     echoes: list[str] = []
     result = run_harden(
@@ -137,8 +155,11 @@ def test_harden_scripts_only_from_fixture(tmp_path):
     assert by_stage[StageId.FAIL2BAN].status == "dry-run"
     assert by_stage[StageId.OPENCANARY].status == "skipped"
     assert by_stage[StageId.DNS].status == "skipped"
+    assert by_stage[StageId.DROP].status == "skipped"
     assert by_stage[StageId.CRON].status == "dry-run"
     assert any("Omarchy" in e for e in echoes)
+    assert (tmp_path / "out" / "harden-scripts" / "07-setup-drop.sh").is_file()
+    assert (tmp_path / "out" / "harden-scripts" / "shield-drop-refresh.sh").is_file()
 
 
 def test_harden_optional_defaults_dry_run(tmp_path):
@@ -159,10 +180,13 @@ def test_harden_optional_defaults_dry_run(tmp_path):
             StageId.CONFIGURE,
             StageId.OPENCANARY,
             StageId.DNS,
+            StageId.DROP,
         ],
     )
     result = run_harden(opts, echo=lambda _m: None, confirm=lambda _p, d: d)
     by_stage = {s.stage: s for s in result.stages}
     assert by_stage[StageId.OPENCANARY].status == "dry-run"
     assert by_stage[StageId.DNS].status == "dry-run"
+    assert by_stage[StageId.DROP].status == "dry-run"
     assert PRIMARY_DNS in by_stage[StageId.DNS].message
+    assert "Spamhaus DROP" in by_stage[StageId.DROP].message

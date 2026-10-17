@@ -51,7 +51,9 @@ Optional: `sudo ln -s "$(pwd)/shield-map" /usr/local/bin/shield-map` (and same f
 
 1. discover open ports → 2. generate nftables / Fail2ban / OpenCanary artifacts →  
 3. apply firewall → 4. Fail2ban → 5. optional OpenCanary (Y/n) →  
-6. optional filtered DNS `1.1.1.2` + `9.9.9.9` (Y/n) → 7. install **`shield-audit`** cron.
+6. optional filtered DNS `1.1.1.2` + `9.9.9.9` (Y/n) →  
+7. optional Spamhaus DROP (Y/n; nftables + daily refresh) →  
+8. install **`shield-audit`** cron.
 
 Distro detection at startup (Red Hat / Ubuntu / Arch·Omarchy) writes tailored scripts under `<out>/harden-scripts/`.
 
@@ -65,7 +67,7 @@ Distro detection at startup (Red Hat / Ubuntu / Arch·Omarchy) writes tailored s
 sudo ./shield-up --apply -o out-harden/
 
 # Non-interactive (Ansible / cloud-init / bootstrap)
-sudo ./shield-up --apply -y --opencanary --dns -o /var/lib/shield-map/bootstrap/
+sudo ./shield-up --apply -y --opencanary --dns --drop -o /var/lib/shield-map/bootstrap/
 ```
 
 **Artifacts / logs**
@@ -76,8 +78,14 @@ sudo ./shield-up --apply -y --opencanary --dns -o /var/lib/shield-map/bootstrap/
 | `out-harden/<host>/rules-nftables.conf` | Host firewall |
 | `out-harden/<host>/jail.d/shield-map.conf` | Fail2ban drop-in |
 | `out-harden/harden-scripts/` | Distro-specific apply scripts |
+| `out-harden/harden-scripts/07-setup-drop.sh` | Spamhaus DROP install + cron |
+| `out-harden/harden-scripts/shield-drop-refresh.sh` | Cron-safe DROP refresh |
+| `/var/lib/shield-map/drop/` | DROP CIDR lists + last-good nft fragment |
 | `/var/log/shield-audit.log` | Cron drift log (after apply) |
+| `/var/log/shield-drop.log` | DROP refresh log (after apply) |
 | `journalctl -u fail2ban` / `opencanary` | Service health |
+
+Operator notes for DROP size, rate limits, and failure behavior: [SPAMHAUS-DROP.md](SPAMHAUS-DROP.md).
 
 ---
 
@@ -111,6 +119,7 @@ Legacy baseline path `/var/lib/fw-audit/baseline-audit-report.xml` is still acce
 | Fail2ban jail disabled | `jail.d/shield-map.conf` comments | Add a matching `filter.d` or enable only stock filters (sshd, etc.) |
 | OpenCanary port conflict | `.opencanary.conf`, `ss -tulpn` | Disable modules for ports already in use; re-run configure |
 | DNS not applied | `05-setup-dns.sh`, `resolvectl status` | Confirm systemd-resolved or NetworkManager path; avoid DHCP overwrite of `/etc/resolv.conf` |
+| DROP not refreshing | `/var/log/shield-drop.log`, `nft list table inet shield_drop` | Check curl/wget, rate-limit stamp, and that download failures keep prior sets by design |
 | Unsupported distro | Startup banner `family=unknown` | Install nftables/fail2ban manually; run generated scripts after edit |
 | Missing baseline | `shield-audit` exit 2 | Pass `-b` or run `shield-up` first |
 | Permission denied on `ss`/`nft` | stderr | Re-run apply stages with sudo |

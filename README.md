@@ -11,7 +11,7 @@ Home labs usually end up with the firewall off or wide open because nobody knows
 | Script | Role |
 |--------|------|
 | **`./shield-map`** | Capture / ingest → rulesets + Fail2ban + OpenCanary + XML report |
-| **`./shield-up`** | Linux harden composition (apply firewall, Fail2ban, optional OpenCanary/DNS, drift cron) |
+| **`./shield-up`** | Linux harden composition (apply firewall, Fail2ban, optional OpenCanary/DNS/DROP, drift cron) |
 | **`./shield-audit`** | Drift check vs baseline (cron-friendly; exit 1 on drift) |
 
 Python package import remains `fw_audit` for library consumers. Legacy `fw-audit` CLI still works with a deprecation note. See [docs/MIGRATION.md](docs/MIGRATION.md).
@@ -38,7 +38,7 @@ The three tools map to different parts of a formal security posture (CIS Control
 | Tool | What it supports | Primary controls |
 |------|------------------|------------------|
 | **`shield-map`** | Discovers listeners, generates deny-by-default host rules, emits Fail2ban/OpenCanary artifacts and the XML baseline | CIS 4.4 / 4.5 (host firewall), 9.4 / 12.4 (default-deny, unauthorized ports), NIST SC-7 / SC-7(5) / SC-7(12) |
-| **`shield-up`** | Applies the rules and layers on the services you intentionally leave open (Fail2ban), optional decoys (OpenCanary), and filtered DNS | CIS 9.2 / 13.3 (approved ports + monitoring), NIST SI-4 (monitoring), boundary hygiene |
+| **`shield-up`** | Applies the rules and layers on the services you intentionally leave open (Fail2ban), optional decoys (OpenCanary), filtered DNS, and Spamhaus DROP | CIS 9.2 / 13.3 (approved ports + monitoring), NIST SI-4 (monitoring), boundary hygiene |
 | **`shield-audit`** | Re-checks the host against the stored baseline and fails on drift | CIS 9.2 (ongoing verification), NIST CM-6 (configuration settings) |
 
 Full field-level mapping of XML elements, finding codes, and status values: [docs/compliance-mapping.md](docs/compliance-mapping.md). Broader alignment narrative (including FedRAMP-style evidence use): [docs/PLAN.md §2](docs/PLAN.md#2-compliance-alignment-framework).
@@ -57,8 +57,11 @@ flowchart TB
   O -->|no| DNSQ
   OC --> DNSQ{6 Filtered DNS?<br/>Y/n}
   DNSQ -->|yes| DNS[1.1.1.2 primary<br/>9.9.9.9 backup]
-  DNSQ -->|no| CRON
-  DNS --> CRON[7 cron<br/>shield-audit drift vs baseline]
+  DNSQ -->|no| DROPQ
+  DNS --> DROPQ{7 Spamhaus DROP?<br/>Y/n}
+  DROPQ -->|yes| DROP[nft shield_drop4/6<br/>daily refresh]
+  DROPQ -->|no| CRON
+  DROP --> CRON[8 cron<br/>shield-audit drift vs baseline]
   CRON --> DONE([Hardened])
 ```
 
@@ -117,6 +120,7 @@ flowchart TB
 | **Fail2ban** | Jails on intentionally open ports (`jail.d/shield-map.conf`) |
 | **OpenCanary** | Decoys on unused high-value ports (optional via **`shield-up`**) |
 | **Filtered DNS** | `1.1.1.2` primary + `9.9.9.9` backup (optional **`shield-up`** stage) |
+| **Spamhaus DROP** | Small high-risk CIDR blocklist in nftables (optional **`shield-up`** stage; [docs/SPAMHAUS-DROP.md](docs/SPAMHAUS-DROP.md)) |
 | **Drift** | **`shield-audit`** cron vs baseline XML |
 
 **SnarkSentinel** consumes XML / matrix / rules via the [library API](docs/INTEGRATION.md) (`import fw_audit`).
@@ -144,12 +148,13 @@ flowchart TB
 | **4 fail2ban** | Install packages + jail open ports | Confirmed when `--apply` |
 | **5 opencanary** | Install with defaults | **Y/n** · `--opencanary` / `--no-opencanary` |
 | **6 dns** | Filtered resolvers | **Y/n** · `--dns` / `--no-dns` |
-| **7 cron** | Daily **`shield-audit`** drift | Confirmed when `--apply` |
+| **7 drop** | Spamhaus DROP → nftables + daily refresh | **Y/n** · `--drop` / `--no-drop` |
+| **8 cron** | Daily **`shield-audit`** drift | Confirmed when `--apply` |
 
 ```bash
-./shield-up -o out-harden/                                    # scripts only
-sudo ./shield-up --apply -o out-harden/                       # prompts
-sudo ./shield-up --apply -y --opencanary --dns -o out-harden/ # non-interactive
+./shield-up -o out-harden/                                           # scripts only
+sudo ./shield-up --apply -o out-harden/                              # prompts
+sudo ./shield-up --apply -y --opencanary --dns --drop -o out-harden/ # non-interactive
 ```
 
 ### C — `shield-audit` (drift)

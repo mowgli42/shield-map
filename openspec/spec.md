@@ -117,9 +117,11 @@ OpenCanary output is deception **suggestions**, not a firewall ruleset.
   4. **fail2ban** — install packages + jail.d for open ports
   5. **opencanary** — Y/n (defaults) install OpenCanary
   6. **dns** — Y/n set filtered DNS `1.1.1.2` with `9.9.9.9` backup
-  7. **cron** — install **`shield-audit`** drift cron
+  7. **drop** — Y/n load Spamhaus DROP (IPv4+IPv6) into nftables `inet shield_drop` + daily refresh cron (`spamhaus-drop` alias)
+  8. **cron** — install **`shield-audit`** drift cron
+- DROP scripts download official feeds (`drop.txt` / `dropv6.txt`), parse CIDRs, load `shield_drop4`/`shield_drop6` sets, rate-limit fetches to ≤1/hour, and **keep previous sets on download/parse failure**. Operator notes: [docs/SPAMHAUS-DROP.md](../docs/SPAMHAUS-DROP.md).
 - Detects **Red Hat**, **Ubuntu/Debian**, or **Arch** (including **Omarchy**) at startup and writes tailored scripts under `<out>/harden-scripts/`.
-- Default is `--scripts-only` (review-before-apply); `--apply` executes with prompts (`--yes`, `--opencanary`/`--no-opencanary`, `--dns`/`--no-dns`).
+- Default is `--scripts-only` (review-before-apply); `--apply` executes with prompts (`--yes`, `--opencanary`/`--no-opencanary`, `--dns`/`--no-dns`, `--drop`/`--no-drop`).
 
 ### 3.9 CLI surface
 

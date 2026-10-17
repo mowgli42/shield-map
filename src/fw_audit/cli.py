@@ -236,7 +236,10 @@ def harden_cmd(
         False,
         "--yes",
         "-y",
-        help="Assume yes for apply confirmations (still respects --opencanary/--dns flags)",
+        help=(
+            "Assume yes for apply confirmations "
+            "(still respects --opencanary/--dns/--drop flags)"
+        ),
     ),
     opencanary: bool | None = typer.Option(
         None,
@@ -248,19 +251,27 @@ def harden_cmd(
         "--dns/--no-dns",
         help="Set filtered DNS 1.1.1.2 with 9.9.9.9 backup (prompt when applying if omitted)",
     ),
+    drop: bool | None = typer.Option(
+        None,
+        "--drop/--no-drop",
+        help=(
+            "Enable Spamhaus DROP nftables blocklist + daily refresh "
+            "(prompt when applying if omitted)"
+        ),
+    ),
     stages: str | None = typer.Option(
         None,
         "--stages",
         help=(
             "Comma-separated stages: "
-            "discover,configure,firewall,fail2ban,opencanary,dns,cron"
+            "discover,configure,firewall,fail2ban,opencanary,dns,drop,cron"
         ),
     ),
     hostname: str | None = typer.Option(
         None, "--hostname", help="Override hostname label"
     ),
 ) -> None:
-    """Linux harden stages: netstat → firewall → Fail2ban → OpenCanary → DNS → cron.
+    """Linux harden: netstat → firewall → Fail2ban → OpenCanary → DNS → DROP → cron.
 
     Detects Red Hat, Ubuntu/Debian, or Arch (including Omarchy) at startup and
     writes tailored install scripts under <output>/harden-scripts/.
@@ -288,6 +299,7 @@ def harden_cmd(
         yes=yes,
         install_opencanary=opencanary,
         update_dns=dns,
+        install_drop=drop,
         stages=stage_list,
         hostname=hostname,
     )
