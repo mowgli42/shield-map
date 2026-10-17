@@ -1,10 +1,31 @@
 # Firewall Ruleset & Network Exposure Audit Tool (`fw-audit`)
 
+![fw-audit harden — Linux Host Hardening Path](docs/images/fw-audit-harden-linux-path.jpg)
+
 Python CLI for **personal / home lab** use: ingest netstat or open-port exports (or answer a short questionnaire), classify exposure using cybersecurity best practices, generate **deny-by-default** firewall rules for Windows, Linux, and Cisco, and produce **XML audit reports** with an **XSLT** HTML view for assessments.
 
 Aligned with **CIS Controls v8.1 (IG1)** and **NIST SP 800-53 Rev 5** (SC-7, AC-4) concepts — see [docs/PLAN.md](docs/PLAN.md) and [docs/compliance-mapping.md](docs/compliance-mapping.md).
 
 ## Architecture
+
+### Linux harden path (`fw-audit harden`)
+
+```mermaid
+flowchart TB
+  START([fw-audit harden]) --> DETECT[Detect distro<br/>Red Hat / Ubuntu / Arch·Omarchy]
+  DETECT --> D[1 discover<br/>ss -tulpn or netstat]
+  D --> C[2 configure<br/>nftables + Fail2ban + OpenCanary artifacts<br/>+ audit-report.xml]
+  C --> F[3 firewall<br/>apply nftables via nft -f]
+  F --> J[4 fail2ban<br/>install + jail open ports]
+  J --> O{5 OpenCanary?<br/>Y/n}
+  O -->|yes| OC[Install OpenCanary]
+  O -->|no| DNSQ
+  OC --> DNSQ{6 Filtered DNS?<br/>Y/n}
+  DNSQ -->|yes| DNS[1.1.1.2 primary<br/>9.9.9.9 backup]
+  DNSQ -->|no| CRON
+  DNS --> CRON[7 cron<br/>daily drift vs baseline]
+  CRON --> DONE([Hardened])
+```
 
 ```mermaid
 flowchart TB
