@@ -1,6 +1,6 @@
 # shield-map
 
-![shield-up — Linux Host Hardening Path](docs/images/fw-audit-harden-linux-path.jpg)
+![shield-map — Three Tools](docs/images/shield-map-three-tools.jpg)
 
 Home-lab tooling that turns **open ports** (live `ss`/`netstat` or exports) into **deny-by-default** firewall rules, Fail2ban jails, OpenCanary suggestions, filtered DNS options, and XML audit evidence (CIS Controls v8.1 IG1 / NIST SC-7 concepts).
 
