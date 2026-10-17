@@ -92,17 +92,42 @@ Example output: [docs/examples/client-simple-output.md](docs/examples/client-sim
 
 ### B — Linux harden stages (live host)
 
+Primary path for a single Linux machine: open ports drive the firewall config, then optional defense layers and drift monitoring.
+
 ```mermaid
-flowchart LR
-  D[1 discover\nss/netstat] --> C[2 configure\nnftables + jails]
-  C --> F[3 apply firewall]
-  F --> J[4 Fail2ban]
-  J --> O[5 OpenCanary Y/n]
-  O --> DNS[6 filtered DNS Y/n]
-  DNS --> CRON[7 fw-audit cron]
+flowchart TB
+  START([fw-audit harden]) --> DETECT[Detect distro\nRed Hat / Ubuntu / Arch·Omarchy]
+  DETECT --> D[1 discover\nss -tulpn or netstat]
+  D --> C[2 configure\nnftables + Fail2ban + OpenCanary artifacts]
+  C --> F[3 firewall\napply nftables rules]
+  F --> J[4 fail2ban\ninstall + jail open ports]
+  J --> O{5 OpenCanary?\nY/n defaults}
+  O -->|yes| OC[Install OpenCanary]
+  O -->|no| DNSQ
+  OC --> DNSQ{6 Filtered DNS?\nY/n}
+  DNSQ -->|yes| DNS[1.1.1.2 primary\n9.9.9.9 backup]
+  DNSQ -->|no| CRON
+  DNS --> CRON[7 cron\nfw-audit drift vs baseline]
+  CRON --> DONE([Done])
 ```
 
-At startup, `harden` detects **Red Hat**, **Ubuntu/Debian**, or **Arch** (including **Omarchy**) and writes package-manager-specific scripts under `out-harden/harden-scripts/`.
+| Stage | What it does | Prompt / flags |
+|-------|----------------|----------------|
+| **1 discover** | Capture listening ports (`ss` preferred, else `netstat`) into `out-harden/imports/<host>/` | `--input` skips live capture |
+| **2 configure** | Classify ports → nftables rules, Fail2ban jail.d, OpenCanary suggestions, `audit-report.xml` | Always runs when selected |
+| **3 firewall** | Apply `rules-nftables.conf` via `nft -f` | Confirmed when `--apply` |
+| **4 fail2ban** | Install packages (distro-specific) + copy jail for open ports | Confirmed when `--apply` |
+| **5 opencanary** | Install OpenCanary with generated defaults | **Y/n** · `--opencanary` / `--no-opencanary` |
+| **6 dns** | Set filtered resolvers | **Y/n** · `--dns` / `--no-dns` · `1.1.1.2` + `9.9.9.9` |
+| **7 cron** | Install daily drift job (`fw-audit report` + `diff` vs baseline) | Confirmed when `--apply` |
+
+At startup, `harden` detects the host family and writes matching scripts under `out-harden/harden-scripts/`:
+
+| Family | Package manager | Examples |
+|--------|-----------------|----------|
+| **redhat** | `dnf` / `yum` | RHEL, Rocky, Alma, Fedora |
+| **ubuntu** | `apt` | Ubuntu, Debian |
+| **arch** | `pacman` | Arch Linux, **Omarchy** |
 
 ```bash
 # Review scripts only (default) — uses live ss/netstat
@@ -118,7 +143,7 @@ sudo fw-audit harden --apply -o out-harden/
 sudo fw-audit harden --apply -y --opencanary --dns -o out-harden/
 ```
 
-Stages: **discover** → **configure** → **firewall** → **fail2ban** → **opencanary** (defaults, Y/n) → **dns** (`1.1.1.2` + `9.9.9.9` backup, Y/n) → **cron** (daily `fw-audit diff` vs baseline).
+Default is **scripts-only** (review before apply). Re-run with `--apply` to execute; scripts remain under `harden-scripts/` for manual or replay use.
 
 ### C — Audit existing hosts (netstat / ss)
 
