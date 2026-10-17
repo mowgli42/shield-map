@@ -2,7 +2,9 @@
 
 ![shield-map — Three Tools](docs/images/shield-map-three-tools.jpg)
 
-Home-lab tooling that turns **open ports** (live `ss`/`netstat` or exports) into **deny-by-default** firewall rules, Fail2ban jails, OpenCanary suggestions, filtered DNS options, and XML audit evidence (CIS Controls v8.1 IG1 / NIST SC-7 concepts).
+Home labs usually end up with the firewall off or wide open because nobody knows which services are actually listening. The ports that *are* intentional stay unprotected. Fail2ban, OpenCanary, and filtered DNS exist but never get configured. And even when they do, nothing watches for drift.
+
+**shield-map** discovers what is running, generates deny-by-default rules for everything else, protects the services you choose to leave open, and gives you a baseline you can re-check. It emits Fail2ban jails, OpenCanary suggestions, filtered DNS options, and XML audit evidence aligned with CIS Controls v8.1 (IG1) and NIST SC-7 concepts.
 
 **User-facing entry points** (recommended):
 
