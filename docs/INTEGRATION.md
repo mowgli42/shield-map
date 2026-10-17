@@ -160,7 +160,7 @@ Guidance:
 | Task | Prefer |
 |------|--------|
 | Rules + XML from export or live capture | `shield-map` |
-| Linux harden / install Fail2ban / DNS / cron | `shield-up` |
+| Linux harden / install Fail2ban / DNS / DROP / cron | `shield-up` |
 | Drift vs stored baseline | `shield-audit` or library `diff` |
 
 **Stable automation contract:** `shield-up` defaults to **scripts-only** (no apply).

@@ -95,7 +95,7 @@ Operator notes for DROP size, rate limits, and failure behavior: [SPAMHAUS-DROP.
 
 **How to integrate**
 
-- Installed by `shield-up` stage 7 as `/etc/cron.d/shield-audit` → `/usr/local/sbin/shield-audit-cron.sh`
+- Installed by `shield-up` stage 8 as `/etc/cron.d/shield-audit` → `/usr/local/sbin/shield-audit-cron.sh`
 - Manual: `./shield-audit -b out-harden/audit-report.xml -o /tmp/drift-check`
 - systemd timer or external scheduler can call the same binary
 
