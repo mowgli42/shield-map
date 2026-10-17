@@ -31,6 +31,18 @@ Pip also installs console scripts: `shield-map`, `shield-up`, `shield-audit` (an
 
 ## Architecture
 
+### Controls and posture
+
+The three tools map to different parts of a formal security posture (CIS Controls v8.1 IG1 and NIST SP 800-53 Rev 5 concepts):
+
+| Tool | What it supports | Primary controls |
+|------|------------------|------------------|
+| **`shield-map`** | Discovers listeners, generates deny-by-default host rules, emits Fail2ban/OpenCanary artifacts and the XML baseline | CIS 4.4 / 4.5 (host firewall), 9.4 / 12.4 (default-deny, unauthorized ports), NIST SC-7 / SC-7(5) / SC-7(12) |
+| **`shield-up`** | Applies the rules and layers on the services you intentionally leave open (Fail2ban), optional decoys (OpenCanary), and filtered DNS | CIS 9.2 / 13.3 (approved ports + monitoring), NIST SI-4 (monitoring), boundary hygiene |
+| **`shield-audit`** | Re-checks the host against the stored baseline and fails on drift | CIS 9.2 (ongoing verification), NIST CM-6 (configuration settings) |
+
+Full field-level mapping of XML elements, finding codes, and status values: [docs/compliance-mapping.md](docs/compliance-mapping.md). Broader alignment narrative (including FedRAMP-style evidence use): [docs/PLAN.md §2](docs/PLAN.md#2-compliance-alignment-framework).
+
 ### Linux harden path (`shield-up`)
 
 ```mermaid
