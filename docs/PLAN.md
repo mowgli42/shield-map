@@ -537,9 +537,9 @@ sudo nft -f out/nas01/rules-nftables.conf
 
 ### Recommended operating composition (home-lab / SnarkSentinel)
 
-`fw-audit` drafts the **host firewall** layer (nftables or Windows Firewall). Pair it with **Fail2ban** on intentionally open ports, **OpenCanary** on unused ports, filtered DNS (`1.1.1.2` primary, `9.9.9.9` backup), and optional IP blocklists. SnarkSentinel consumes the XML / rules / DOT outputs as evidence—it does not replace those controls. See README “Recommended composition”.
+`shield-map` drafts the **host firewall** layer (nftables or Windows Firewall). Pair it with **Fail2ban** on intentionally open ports, **OpenCanary** on unused ports, filtered DNS (`1.1.1.2` primary, `9.9.9.9` backup), and optional Spamhaus DROP. SnarkSentinel consumes the XML / rules / DOT outputs as evidence—it does not replace those controls. See README “Recommended composition” and [SPAMHAUS-DROP.md](SPAMHAUS-DROP.md).
 
-On Linux, `fw-audit harden` runs that composition as ordered stages (discover → configure → apply firewall → Fail2ban → optional OpenCanary → optional DNS → drift cron), detecting Red Hat / Ubuntu / Arch (Omarchy) to tailor install scripts.
+On Linux, `shield-up` (alias `fw-audit harden`) runs that composition as ordered stages (discover → configure → apply firewall → Fail2ban → optional OpenCanary → optional DNS → optional Spamhaus DROP → drift cron), detecting Red Hat / Ubuntu / Arch (Omarchy) to tailor install scripts. See [SPAMHAUS-DROP.md](SPAMHAUS-DROP.md).
 
 ---
 
