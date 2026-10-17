@@ -40,6 +40,7 @@ class HardenOptions:
     yes: bool = False
     install_opencanary: bool | None = None  # None → prompt when apply
     update_dns: bool | None = None
+    install_drop: bool | None = None  # Spamhaus DROP; None → prompt when apply
     stages: list[StageId] = field(default_factory=lambda: list(STAGE_ORDER))
     hostname: str | None = None
     fw_audit_bin: str | None = None
@@ -380,6 +381,41 @@ def run_harden(
             result.stages.append(
                 StageResult(
                     stage=StageId.DNS, status="skipped", message="Operator declined DNS"
+                )
+            )
+            echo("  → skipped")
+
+    # --- Stage: Spamhaus DROP (Y/n) ---
+    if StageId.DROP in selected:
+        echo(f"\n== Stage {StageId.DROP.value}: {STAGE_TITLES[StageId.DROP]} ==")
+        want = _want(
+            options.install_drop,
+            "Enable Spamhaus DROP blocklist (nftables + daily refresh)?",
+            True,
+        )
+        if want:
+            sr = _exec_named(StageId.DROP, "setup_drop")
+            if dry_run and options.install_drop is None:
+                sr = StageResult(
+                    stage=StageId.DROP,
+                    status="dry-run",
+                    message=(
+                        "Would prompt Y/n then run 07-setup-drop.sh "
+                        "(Spamhaus DROP → inet shield_drop; daily cron)"
+                    ),
+                    artifacts=[
+                        str(result.scripts.get("setup_drop", "")),
+                        str(result.scripts.get("drop_refresh", "")),
+                    ],
+                )
+            result.stages.append(sr)
+            echo(f"  → {sr.status}: {_tail(sr.message)}")
+        else:
+            result.stages.append(
+                StageResult(
+                    stage=StageId.DROP,
+                    status="skipped",
+                    message="Operator declined Spamhaus DROP",
                 )
             )
             echo("  → skipped")

@@ -126,7 +126,7 @@ def shield_up() -> None:
         name="shield-up",
         help=(
             "Linux harden: discover → nftables → Fail2ban → optional OpenCanary → "
-            "optional DNS (1.1.1.2 / 9.9.9.9) → shield-audit cron."
+            "optional DNS → optional Spamhaus DROP → shield-audit cron."
         ),
         add_completion=False,
         invoke_without_command=True,
@@ -143,6 +143,7 @@ def shield_up() -> None:
         yes: bool = typer.Option(False, "--yes", "-y"),
         opencanary: bool | None = typer.Option(None, "--opencanary/--no-opencanary"),
         dns: bool | None = typer.Option(None, "--dns/--no-dns"),
+        drop: bool | None = typer.Option(None, "--drop/--no-drop"),
         stages: str | None = typer.Option(None, "--stages"),
         hostname: str | None = typer.Option(None, "--hostname"),
         version: bool = typer.Option(False, "--version"),
@@ -160,6 +161,7 @@ def shield_up() -> None:
             yes=yes,
             opencanary=opencanary,
             dns=dns,
+            drop=drop,
             stages=stages,
             hostname=hostname,
         )
