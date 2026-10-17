@@ -76,7 +76,12 @@ class DiffChange:
 
 @dataclass
 class DiffResult:
-    """Machine-parseable drift report for SnarkSentinel."""
+    """Machine-parseable drift report for SnarkSentinel (library ``diff()``).
+
+    Canonical fields: ``changes``, ``has_drift``.
+    Compatibility aliases: ``findings`` → ``changes``, ``drift_detected`` → ``has_drift``
+    (mirrors the XML CLI snapshot type in ``fw_audit.diff.compare``).
+    """
 
     changes: list[DiffChange]
     baseline_listener_count: int
@@ -86,12 +91,25 @@ class DiffResult:
     def has_drift(self) -> bool:
         return bool(self.changes)
 
+    @property
+    def drift_detected(self) -> bool:
+        """Alias of ``has_drift`` for CLI/XML DiffResult consumers."""
+        return self.has_drift
+
+    @property
+    def findings(self) -> list[DiffChange]:
+        """Alias of ``changes`` for CLI/XML DiffResult consumers."""
+        return self.changes
+
     def to_dict(self) -> dict[str, Any]:
+        change_dicts = [c.to_dict() for c in self.changes]
         return {
             "has_drift": self.has_drift,
+            "drift_detected": self.has_drift,
             "baseline_listener_count": self.baseline_listener_count,
             "current_listener_count": self.current_listener_count,
-            "changes": [c.to_dict() for c in self.changes],
+            "changes": change_dicts,
+            "findings": change_dicts,
         }
 
 

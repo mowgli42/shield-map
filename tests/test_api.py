@@ -59,9 +59,14 @@ def test_diff_detects_added_listener(tmp_path):
 
     report = diff(baseline, current)
     assert report.has_drift
+    assert report.drift_detected is True  # alias
+    assert report.findings is report.changes  # alias
     added = [c for c in report.changes if c.kind == "added" and c.subject == "listener"]
     assert any("2375" in c.key for c in added)
-    assert report.to_dict()["has_drift"] is True
+    payload = report.to_dict()
+    assert payload["has_drift"] is True
+    assert payload["drift_detected"] is True
+    assert payload["changes"] == payload["findings"]
 
 
 def test_diff_no_drift_same_export(tmp_path):

@@ -128,6 +128,11 @@ def test_compare_detects_listener_and_classification_and_cross_zone_drift():
     assert "CROSS_ZONE_ADDED" in codes
     assert "CROSS_ZONE_REMOVED" in codes
     assert result.drift_detected
+    assert result.has_drift is True  # alias for library DiffResult consumers
+    assert result.changes is result.findings
+    payload = result.to_dict()
+    assert payload["has_drift"] is True
+    assert payload["findings"] == payload["changes"]
 
     added = next(f for f in result.findings if f.code == "LISTENER_ADDED")
     assert added.port == 23
