@@ -241,6 +241,7 @@ Package name is unchanged this release — see [docs/INTEGRATION.md](docs/INTEGR
 ## Documentation
 
 - [docs/MIGRATION.md](docs/MIGRATION.md) — rename, shield-up/shield-audit ops, troubleshooting
+- [docs/SPAMHAUS-DROP.md](docs/SPAMHAUS-DROP.md) — optional DROP stage (size, cron, failure behavior)
 - [openspec/spec.md](openspec/spec.md) — current capabilities
 - [docs/INTEGRATION.md](docs/INTEGRATION.md) — library API
 - [docs/PLAN.md](docs/PLAN.md) — roadmap
