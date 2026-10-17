@@ -196,7 +196,12 @@ def run_harden(
         echo(f"  → rules under {host_out}")
         echo(f"  → baseline {baseline}")
 
-        fw_bin = options.fw_audit_bin or shutil.which("fw-audit") or "fw-audit"
+        fw_bin = (
+            options.fw_audit_bin
+            or shutil.which("shield-audit")
+            or shutil.which("fw-audit")
+            or "shield-audit"
+        )
         result.scripts = write_harden_scripts(
             scripts_dir,
             distro,
@@ -211,7 +216,12 @@ def run_harden(
         if host_out.is_dir() and baseline.is_file():
             result.host_out = host_out
             result.baseline_xml = baseline
-            fw_bin = options.fw_audit_bin or shutil.which("fw-audit") or "fw-audit"
+            fw_bin = (
+                options.fw_audit_bin
+                or shutil.which("shield-audit")
+                or shutil.which("fw-audit")
+                or "shield-audit"
+            )
             result.scripts = write_harden_scripts(
                 scripts_dir,
                 distro,
@@ -377,7 +387,7 @@ def run_harden(
     # --- Stage: cron ---
     if StageId.CRON in selected:
         echo(f"\n== Stage {StageId.CRON.value}: {STAGE_TITLES[StageId.CRON]} ==")
-        if _confirm_apply("Install fw-audit drift cron job?", True):
+        if _confirm_apply("Install shield-audit drift cron job?", True):
             sr = _exec_named(StageId.CRON, "setup_cron")
             result.stages.append(sr)
             echo(f"  → {sr.status}: {_tail(sr.message)}")

@@ -1,7 +1,7 @@
 [project]
 name = "fw-audit"
 version = "0.1.0"
-description = "Netstat/port audit tool with firewall rulesets and XML security reports"
+description = "shield-map: netstat/port audit, firewall rulesets, and Linux harden stages"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -18,7 +18,10 @@ dev = [
 ]
 
 [project.scripts]
-fw-audit = "fw_audit.cli:app"
+shield-map = "fw_audit.entrypoints:shield_map"
+shield-up = "fw_audit.entrypoints:shield_up"
+shield-audit = "fw_audit.entrypoints:shield_audit"
+fw-audit = "fw_audit.entrypoints:deprecated_fw_audit"
 
 [build-system]
 requires = ["hatchling"]

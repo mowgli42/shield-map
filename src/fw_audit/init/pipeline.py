@@ -69,7 +69,7 @@ def run_init(
         ctx.rulesets.append(_artifact("linux", "nftables", path, host.id, count))
 
     if "fail2ban" in platforms or "nftables" in platforms:
-        path = host_out / "jail.d" / "fw-audit.conf"
+        path = host_out / "jail.d" / "shield-map.conf"
         count = generate_fail2ban(host, listeners, policy, path, init_mode=True)
         ctx.rulesets.append(_artifact("fail2ban", "jail.d", path, host.id, count))
 
@@ -110,7 +110,7 @@ def _write_readme(output_dir: Path, intent: HostIntent) -> None:
         "",
         "NEXT STEPS:",
         "1. Review rules-*.ps1 or rules-nftables.conf",
-        "2. On Linux, review jail.d/fw-audit.conf and copy to /etc/fail2ban/jail.d/ if desired",
+        "2. On Linux, review jail.d/shield-map.conf and copy to /etc/fail2ban/jail.d/ if desired",
         "3. Apply during a maintenance window",
         "4. Re-run 'fw-audit all-in-one' with netstat export to compare live vs plan",
         "",

@@ -1,8 +1,12 @@
 # Integration contract — SnarkSentinel / library consumers
 
-`fw-audit` exposes a small, stable Python API so local agents can review
+`fw_audit` exposes a small, stable Python API so local agents can review
 posture, detect drift, and stage a local-only firewall profile **without**
 scraping CLI stdout.
+
+**CLI rename (user-facing):** prefer `shield-map`, `shield-up`, and `shield-audit`.
+The **import package name stays `fw_audit`** this release — no code change required
+for SnarkSentinel imports. See [MIGRATION.md](MIGRATION.md).
 
 Install the package (editable or from the repo), then import from the top level:
 
@@ -56,6 +60,9 @@ if report.has_drift:
 
 Output is machine-parseable via `DiffResult.to_dict()`.
 
+For host cron / ops, prefer the **`shield-audit`** CLI (writes `drift-summary.txt`,
+exit 1 on drift) rather than scraping CLI stdout from agents.
+
 ## 3. Generate a local-only ruleset profile
 
 Intended for local agent testing: **loopback allowed**, **guardian Unix socket
@@ -84,14 +91,24 @@ Notes:
 - Generated nftables/Windows rules use default-deny inbound with loopback
   accept and **no** non-loopback allow rules.
 
+## 4. Invoking user CLIs from automation
+
+| Task | Prefer |
+|------|--------|
+| Rules + XML from export or live capture | `shield-map` |
+| Linux harden / install Fail2ban / DNS / cron | `shield-up` |
+| Drift vs stored baseline | `shield-audit` |
+
+Fail2ban drop-in path is now `jail.d/shield-map.conf` (was `fw-audit.conf`).
+
 ## Stability
 
 | Symbol | Stability |
 |--------|-----------|
 | `analyze`, `diff`, `generate_local_only`, `load_audit_xml` | Supported |
 | Result dataclasses + `.to_dict()` | Supported |
-| `fw_audit.cli` Typer commands | CLI contract (unchanged) |
+| `shield-map` / `shield-up` / `shield-audit` | Supported user CLIs |
+| `fw-audit` Typer commands | Deprecated alias (still functional) |
 | Internal modules (`parsers`, `classify`, …) | May change without notice |
 
-Prefer this module over parsing `fw-audit analyze --format json` stdout when
-embedding in another local service.
+Prefer this module over parsing CLI stdout when embedding in another local service.

@@ -1,15 +1,19 @@
-# OpenSpec — fw-audit (shield-map)
+# OpenSpec — shield-map (`fw_audit` package)
 
 Living description of **shipped** architecture and capabilities.
 Roadmap detail stays in [docs/PLAN.md](../docs/PLAN.md); items below marked **Planned** are not implemented.
+Migration notes: [docs/MIGRATION.md](../docs/MIGRATION.md).
 
 ## 1. Purpose
 
-`fw-audit` is a Python CLI / library for home-lab firewall planning:
+**shield-map** is a home-lab firewall planner (Python package import: `fw_audit`):
 
 1. Ingest netstat / `ss` / port-list exports (or an init questionnaire).
 2. Classify listeners (preferred / risky / unsafe) and multi-host flows.
 3. Emit deny-by-default rulesets and audit artifacts for review-before-apply.
+4. On Linux, optionally harden via **`shield-up`** and track drift via **`shield-audit`**.
+
+Canonical user CLIs: **`shield-map`**, **`shield-up`**, **`shield-audit`** (repo root bash wrappers + pip entry points). Legacy `fw-audit` remains as a deprecated alias.
 
 Stack exception vs Repo Health default (Svelte + FastAPI + SQLite/Redis): this project is a **local CLI + library** only — no web UI or server runtime.
 
@@ -29,9 +33,10 @@ Primary modules under `src/fw_audit/`:
 
 | Area | Path |
 |------|------|
-| CLI | `cli.py` (Typer) |
+| User entry points | `entrypoints.py` (`shield-map` / `shield-up` / `shield-audit`) |
+| Legacy CLI | `cli.py` (Typer; also `fw-audit` alias) |
 | Library API | `api.py` (re-exported from `fw_audit`) |
-| Orchestration | `pipeline.py`, `init/` |
+| Orchestration | `pipeline.py`, `init/`, `harden/` |
 | Parsers | `parsers/` |
 | Classification | `classify/` |
 | Multi-host graph | `graph/` |
@@ -77,7 +82,7 @@ Emitted under `out/<hostname>/` when `generate` / `all-in-one` runs (and hosts h
 | `rules-windows.ps1` | `windows` / `all` |
 | `rules-nftables.conf` | `nftables` / `linux` / `all` |
 | `rules-cisco-ios.acl` | `cisco` / `all` |
-| `jail.d/fw-audit.conf` (Fail2ban) | `fail2ban`, or with `nftables` / `all` |
+| `jail.d/shield-map.conf` (Fail2ban) | `fail2ban`, or with `nftables` / `all` |
 | `.opencanary.conf` + `opencanary-ports.json` | Always when generate path runs for a host with listeners |
 
 OpenCanary output is deception **suggestions**, not a firewall ruleset.
@@ -92,9 +97,10 @@ OpenCanary output is deception **suggestions**, not a firewall ruleset.
 | `ports-protocols.json` (+ YAML/CSV sidecars) | `report` / `all-in-one` |
 | `network-dataflow.dot` | `all-in-one` (`--dot` / `--no-dot`) |
 
-### 3.6 Diff
+### 3.6 Diff / shield-audit
 
-- CLI: `fw-audit diff <baseline.xml> <current.xml>` (`--format text|json`, exit 1 on drift).
+- Canonical: **`shield-audit`** — live (or `--input`) report + diff vs baseline; writes `drift-summary.txt`; exit 1 on drift.
+- Legacy: `fw-audit diff <baseline.xml> <current.xml>` (`--format text|json`, exit 1 on drift).
 - Library: `fw_audit.diff` / `api.diff` — listener and finding added/removed/changed.
 
 ### 3.7 Init (Phase 1a)
@@ -102,16 +108,16 @@ OpenCanary output is deception **suggestions**, not a firewall ruleset.
 - `fw-audit init` interactive wizard or `--answers` YAML / `--non-interactive`.
 - Writes `init-profile.yaml`, rulesets, XML, `INIT-README.txt`.
 
-### 3.8 Linux harden stages
+### 3.8 Linux harden (`shield-up`)
 
-- `fw-audit harden` — ordered stages for Linux hosts:
+- Canonical: **`shield-up`** (alias: `fw-audit harden`) — ordered stages:
   1. **discover** — live `ss`/`netstat` (or `--input`) → open-port export
   2. **configure** — nftables + Fail2ban + OpenCanary artifacts + baseline XML
   3. **firewall** — apply nftables rules
   4. **fail2ban** — install packages + jail.d for open ports
   5. **opencanary** — Y/n (defaults) install OpenCanary
   6. **dns** — Y/n set filtered DNS `1.1.1.2` with `9.9.9.9` backup
-  7. **cron** — install `fw-audit` drift cron (`diff` vs baseline)
+  7. **cron** — install **`shield-audit`** drift cron
 - Detects **Red Hat**, **Ubuntu/Debian**, or **Arch** (including **Omarchy**) at startup and writes tailored scripts under `<out>/harden-scripts/`.
 - Default is `--scripts-only` (review-before-apply); `--apply` executes with prompts (`--yes`, `--opencanary`/`--no-opencanary`, `--dns`/`--no-dns`).
 
@@ -119,16 +125,11 @@ OpenCanary output is deception **suggestions**, not a firewall ruleset.
 
 | Command | Role |
 |---------|------|
-| `version` | Package version |
-| `init` | Secure baseline from questionnaire |
-| `harden` | Linux staged discover → apply → Fail2ban → OpenCanary → DNS → cron |
-| `ingest` | Validate inputs (listeners + sessions) |
-| `analyze` | Classify + findings (`text` / `json`) |
-| `report` | XML + ports/protocols matrix |
-| `generate` | Rulesets / Fail2ban / OpenCanary |
-| `all-in-one` | Rules + XML + matrix + DOT (+ HTML if possible) |
-| `html` | XSLT transform (requires `xsltproc`) |
-| `diff` | Drift vs baseline XML |
+| **`shield-map`** | Capture/ingest → rules + reports (all-in-one path) |
+| **`shield-up`** | Linux harden stages |
+| **`shield-audit`** | Drift vs baseline |
+| `fw-audit` (deprecated) | Full Typer surface + deprecation note |
+| `init` / `harden` / `all-in-one` / `diff` / … | Still available under `fw-audit` |
 
 ### 3.10 Library API
 
@@ -172,5 +173,6 @@ See phase tables in README and [docs/PLAN.md](../docs/PLAN.md).
 | Library API | `src/fw_audit/api.py`, `tests/test_api.py` |
 | Init | `src/fw_audit/init/`, `tests/test_init.py` |
 | Harden stages | `src/fw_audit/harden/`, `tests/test_harden.py` |
+| Entry points | `src/fw_audit/entrypoints.py`, root `shield-*` scripts, `tests/test_entrypoints.py` |
 
 Smoke: `pytest -q` from a venv with `pip install -e ".[dev]"`.

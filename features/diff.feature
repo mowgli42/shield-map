@@ -1,8 +1,8 @@
-Feature: fw-audit diff against baseline
+Feature: shield-audit / diff against baseline
   Compare two audit-report.xml snapshots for configuration drift
   (listeners, classifications, cross-zone flows). Aligns with
-  `fw-audit diff` and `fw_audit.diff.compare`. Covered by
-  `tests/test_diff.py`.
+  `shield-audit`, `fw-audit diff`, and `fw_audit.diff.compare`. Covered by
+  `tests/test_diff.py` and `tests/test_entrypoints.py`.
 
   Scenario: Drift between baseline and current exits non-zero with JSON findings
     Given a baseline audit-report.xml with listener tcp/445 (risky)
