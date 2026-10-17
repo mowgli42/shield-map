@@ -142,9 +142,13 @@ from fw_audit import analyze, diff, generate_local_only, load_audit_xml
 | Symbol | Behavior |
 |--------|----------|
 | `analyze` | In-memory posture from exports (no artifact writes) |
-| `diff` | Drift between analyze results / contexts / XML paths |
+| `diff` | Returns `api.DiffResult` with `has_drift` / `changes` (`DiffChange`) |
 | `generate_local_only` | Loopback-allowed, remote-inbound-denied profile for agent testing |
 | `load_audit_xml` | Load listeners/findings from `audit-report.xml` |
+
+`api.DiffResult` and XML CLI `diff.compare.DiffResult` both expose compatibility aliases
+(`drift_detected`↔`has_drift`, `findings`↔`changes`). Prefer `from fw_audit import diff`
+for embedders; see INTEGRATION §2–4 for baseline layout and `--scripts-only` stability.
 
 Internal packages may change without notice; prefer this surface over scraping CLI stdout.
 
@@ -157,6 +161,7 @@ Keep these out of “current capability” claims until implemented:
 - Optional nmap XML import
 - `fw-audit policy validate` (policy lint)
 - Pre-commit hook example for exported reports
+- Pip project rename/alias to `shield-map` (import stays `fw_audit`)
 
 See phase tables in README and [docs/PLAN.md](../docs/PLAN.md).
 

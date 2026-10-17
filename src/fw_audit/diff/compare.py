@@ -76,6 +76,13 @@ class DriftFinding:
 
 @dataclass
 class DiffResult:
+    """XML snapshot drift (``diff_paths`` / ``fw-audit diff`` / ``shield-audit``).
+
+    Canonical fields: ``findings``, ``drift_detected``.
+    Compatibility aliases: ``changes`` → ``findings``, ``has_drift`` → ``drift_detected``
+    (mirrors the library API ``fw_audit.api.DiffResult``).
+    """
+
     baseline: str
     current: str
     findings: list[DriftFinding] = field(default_factory=list)
@@ -84,6 +91,16 @@ class DiffResult:
     def drift_detected(self) -> bool:
         return bool(self.findings)
 
+    @property
+    def has_drift(self) -> bool:
+        """Alias of ``drift_detected`` for library DiffResult consumers."""
+        return self.drift_detected
+
+    @property
+    def changes(self) -> list[DriftFinding]:
+        """Alias of ``findings`` for library DiffResult consumers."""
+        return self.findings
+
     def summary(self) -> dict[str, int]:
         counts: dict[str, int] = {}
         for finding in self.findings:
@@ -91,12 +108,15 @@ class DiffResult:
         return counts
 
     def to_dict(self) -> dict[str, Any]:
+        finding_dicts = [f.to_dict() for f in self.findings]
         return {
             "baseline": self.baseline,
             "current": self.current,
             "drift_detected": self.drift_detected,
+            "has_drift": self.drift_detected,
             "summary": self.summary(),
-            "findings": [f.to_dict() for f in self.findings],
+            "findings": finding_dicts,
+            "changes": finding_dicts,
         }
 
     def to_json(self, indent: int = 2) -> str:

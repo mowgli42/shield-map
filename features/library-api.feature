@@ -24,4 +24,6 @@ Feature: Library API analyze and generate_local_only
     And a current AnalyzeResult with an extra tcp/2375 listener
     When the consumer calls `diff(baseline, current)`
     Then `report.has_drift` is true
+    And `report.drift_detected` aliases the same value
     And changes include an added listener whose key contains "2375"
+    And `report.findings` is an alias of `report.changes`

@@ -13,6 +13,18 @@
 
 The **Python package import path remains `fw_audit`** for this release so SnarkSentinel and other embedders do not need to change imports. The legacy `fw-audit` console script still works and prints a short deprecation note.
 
+**Pip distribution name** is still `fw-audit` (product CLIs are `shield-map` / `shield-up` / `shield-audit`). Recommended install:
+
+```bash
+pip install "fw-audit @ git+https://github.com/mowgli42/shield-map.git"
+```
+
+A pip project rename/alias to `shield-map` (keeping `import fw_audit`) is a tracked follow-up — not in this release.
+
+**Library DiffResult:** `from fw_audit import diff` returns `has_drift` / `changes`. XML CLI diff returns `drift_detected` / `findings`. Both types expose the other names as aliases (see [INTEGRATION.md](INTEGRATION.md)).
+
+**Automation:** `shield-up` defaults to scripts-only (no apply). `--scripts-only` / `--apply` are a **stable** contract; any rename will be documented here.
+
 ## Install
 
 ```bash
