@@ -30,6 +30,7 @@ packages = ["src/fw_audit"]
 [tool.hatch.build.targets.wheel.force-include]
 "src/fw_audit/classify/defaults.yaml" = "fw_audit/classify/defaults.yaml"
 "src/fw_audit/report/templates/audit-report.xsl" = "fw_audit/report/templates/audit-report.xsl"
+"src/fw_audit/init/services.yaml" = "fw_audit/init/services.yaml"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -42,4 +43,3 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
-"src/fw_audit/init/services.yaml" = "fw_audit/init/services.yaml"

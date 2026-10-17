@@ -212,6 +212,95 @@ def diff_cmd(
         raise typer.Exit(1)
 
 
+@app.command("harden")
+def harden_cmd(
+    output_dir: Path = typer.Option(Path("out-harden"), "--output-dir", "-o"),
+    input_path: Path | None = typer.Option(
+        None,
+        "--input",
+        "-i",
+        help="Existing netstat/ss export or imports directory (skip live capture)",
+    ),
+    hosts: Path | None = typer.Option(None, "--hosts"),
+    policy: Path | None = typer.Option(None, "--policy"),
+    operator: str = typer.Option("home-lab", "--operator"),
+    apply: bool = typer.Option(
+        False,
+        "--apply/--scripts-only",
+        help="Execute install/apply scripts (default: write distro scripts only)",
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        "-y",
+        help="Assume yes for apply confirmations (still respects --opencanary/--dns flags)",
+    ),
+    opencanary: bool | None = typer.Option(
+        None,
+        "--opencanary/--no-opencanary",
+        help="Install OpenCanary with defaults (prompt when applying if omitted)",
+    ),
+    dns: bool | None = typer.Option(
+        None,
+        "--dns/--no-dns",
+        help="Set filtered DNS 1.1.1.2 with 9.9.9.9 backup (prompt when applying if omitted)",
+    ),
+    stages: str | None = typer.Option(
+        None,
+        "--stages",
+        help=(
+            "Comma-separated stages: "
+            "discover,configure,firewall,fail2ban,opencanary,dns,cron"
+        ),
+    ),
+    hostname: str | None = typer.Option(
+        None, "--hostname", help="Override hostname label"
+    ),
+) -> None:
+    """Linux harden stages: netstat → firewall → Fail2ban → OpenCanary → DNS → cron.
+
+    Detects Red Hat, Ubuntu/Debian, or Arch (including Omarchy) at startup and
+    writes tailored install scripts under <output>/harden-scripts/.
+    """
+    from fw_audit.harden.pipeline import HardenOptions, run_harden
+    from fw_audit.harden.stages import parse_stages
+
+    if sys.platform.startswith("win"):
+        typer.echo("harden is Linux-only; use generate/all-in-one on Windows.", err=True)
+        raise typer.Exit(2)
+
+    try:
+        stage_list = parse_stages(stages)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from exc
+
+    opts = HardenOptions(
+        output_dir=output_dir,
+        input_path=input_path,
+        hosts_file=hosts,
+        policy_file=policy,
+        operator=operator,
+        apply=apply,
+        yes=yes,
+        install_opencanary=opencanary,
+        update_dns=dns,
+        stages=stage_list,
+        hostname=hostname,
+    )
+
+    def _echo(msg: str) -> None:
+        typer.echo(msg)
+
+    def _confirm(prompt: str, default: bool) -> bool:
+        return typer.confirm(prompt, default=default)
+
+    result = run_harden(opts, echo=_echo, confirm=_confirm)
+    failed = [s for s in result.stages if s.status == "failed"]
+    if failed:
+        raise typer.Exit(1)
+
+
 @app.command("all-in-one")
 def all_in_one(
     path: Path = typer.Argument(..., help="Input file or directory"),

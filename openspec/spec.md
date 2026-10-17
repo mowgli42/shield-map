@@ -102,12 +102,26 @@ OpenCanary output is deception **suggestions**, not a firewall ruleset.
 - `fw-audit init` interactive wizard or `--answers` YAML / `--non-interactive`.
 - Writes `init-profile.yaml`, rulesets, XML, `INIT-README.txt`.
 
-### 3.8 CLI surface
+### 3.8 Linux harden stages
+
+- `fw-audit harden` — ordered stages for Linux hosts:
+  1. **discover** — live `ss`/`netstat` (or `--input`) → open-port export
+  2. **configure** — nftables + Fail2ban + OpenCanary artifacts + baseline XML
+  3. **firewall** — apply nftables rules
+  4. **fail2ban** — install packages + jail.d for open ports
+  5. **opencanary** — Y/n (defaults) install OpenCanary
+  6. **dns** — Y/n set filtered DNS `1.1.1.2` with `9.9.9.9` backup
+  7. **cron** — install `fw-audit` drift cron (`diff` vs baseline)
+- Detects **Red Hat**, **Ubuntu/Debian**, or **Arch** (including **Omarchy**) at startup and writes tailored scripts under `<out>/harden-scripts/`.
+- Default is `--scripts-only` (review-before-apply); `--apply` executes with prompts (`--yes`, `--opencanary`/`--no-opencanary`, `--dns`/`--no-dns`).
+
+### 3.9 CLI surface
 
 | Command | Role |
 |---------|------|
 | `version` | Package version |
 | `init` | Secure baseline from questionnaire |
+| `harden` | Linux staged discover → apply → Fail2ban → OpenCanary → DNS → cron |
 | `ingest` | Validate inputs (listeners + sessions) |
 | `analyze` | Classify + findings (`text` / `json`) |
 | `report` | XML + ports/protocols matrix |
@@ -116,7 +130,7 @@ OpenCanary output is deception **suggestions**, not a firewall ruleset.
 | `html` | XSLT transform (requires `xsltproc`) |
 | `diff` | Drift vs baseline XML |
 
-### 3.9 Library API
+### 3.10 Library API
 
 Supported import surface (`docs/INTEGRATION.md`):
 
@@ -157,5 +171,6 @@ See phase tables in README and [docs/PLAN.md](../docs/PLAN.md).
 | Diff | `src/fw_audit/diff/`, `tests/test_diff.py` |
 | Library API | `src/fw_audit/api.py`, `tests/test_api.py` |
 | Init | `src/fw_audit/init/`, `tests/test_init.py` |
+| Harden stages | `src/fw_audit/harden/`, `tests/test_harden.py` |
 
 Smoke: `pytest -q` from a venv with `pip install -e ".[dev]"`.
