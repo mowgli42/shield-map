@@ -29,6 +29,16 @@ python3 -m venv .venv
 
 Pip also installs console scripts: `shield-map`, `shield-up`, `shield-audit` (and deprecated `fw-audit`).
 
+## Screenshots
+
+HTML audit report from the DMZ lab example (`fw-audit all-in-one` → XSLT):
+
+![HTML audit report — preferred / risky / unsafe summary and flows](docs/images/audit-report-html.png)
+
+CLI output for the same all-in-one run (rulesets, Fail2ban, OpenCanary per host):
+
+![fw-audit all-in-one CLI output](docs/images/all-in-one-cli.png)
+
 ## Architecture
 
 ### Controls and posture
